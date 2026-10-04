@@ -15,10 +15,10 @@ const STATE = {
 
 // URL query parameter extraction
 const URL_PARAMS = new URLSearchParams(window.location.search);
-const REF_PARAM = URL_PARAMS.get('ref') || '';
+const REF_PARAM = URL_PARAMS.get('ref') || URL_PARAMS.get('r') || localStorage.getItem('ai60_ref') || '';
 const AMB_PARAM = URL_PARAMS.get('ambassador') || '';
-const UTM_SOURCE = URL_PARAMS.get('utm_source') || (REF_PARAM ? 'referral' : AMB_PARAM ? 'ambassador' : 'direct');
-const UTM_CAMPAIGN = URL_PARAMS.get('utm_campaign') || 'ai60_challenge';
+const UTM_SOURCE = URL_PARAMS.get('utm_source') || localStorage.getItem('ai60_utm_source') || (REF_PARAM ? 'referral' : AMB_PARAM ? 'ambassador' : 'direct');
+const UTM_CAMPAIGN = URL_PARAMS.get('utm_campaign') || localStorage.getItem('ai60_utm_campaign') || '';
 
 // ============================================================================
 // INITIALIZATION
@@ -29,6 +29,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   switchView(initialHash, false);
 
   // Auto-populate referral code if present in URL
+  if (URL_PARAMS.get('ref') || URL_PARAMS.get('r')) {
+    const code = URL_PARAMS.get('ref') || URL_PARAMS.get('r');
+    localStorage.setItem('ai60_ref', code);
+  }
+  if (URL_PARAMS.get('utm_source')) localStorage.setItem('ai60_utm_source', URL_PARAMS.get('utm_source'));
+  if (URL_PARAMS.get('utm_medium')) localStorage.setItem('ai60_utm_medium', URL_PARAMS.get('utm_medium'));
+  if (URL_PARAMS.get('utm_campaign')) localStorage.setItem('ai60_utm_campaign', URL_PARAMS.get('utm_campaign'));
+
   if (REF_PARAM) {
     const refInput = document.getElementById('reg-refcode');
     if (refInput) refInput.value = REF_PARAM;
@@ -47,11 +55,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Check for stored admin token
+  // Restore stored admin token
   const storedAdminToken = localStorage.getItem('ai60_admin_token');
   if (storedAdminToken) {
     STATE.adminToken = storedAdminToken;
-    showAdminNav();
   }
 
   // Load leaderboard
@@ -91,8 +98,8 @@ function switchView(viewName, updateHash = true) {
   // Admin-gate: require admin token for admin views
   const adminViews = ['admin', 'strategy'];
   if (adminViews.includes(viewName) && !STATE.adminToken) {
-    showToast('Admin access required.', 'error');
-    return;
+    viewName = 'admin-login';
+    if (updateHash) window.location.hash = viewName;
   }
 
   const targetId = `view-${viewName}`;
@@ -117,20 +124,30 @@ function switchView(viewName, updateHash = true) {
   // Refresh view-specific data
   if (viewName === 'admin') loadAdminData();
   if (viewName === 'student') refreshStudentDashboard();
+  if (viewName === 'ai-hub') loadAiHubData();
 }
 
 function updateAuthUI() {
   const container = document.getElementById('auth-state-container');
+  const loginBtn = document.getElementById('header-login-btn');
   if (!container) return;
   if (STATE.currentUser) {
+    if (loginBtn) loginBtn.style.display = 'none';
     container.innerHTML = `
       <div style="display:flex;align-items:center;gap:0.5rem;">
         <div style="width:28px;height:28px;border-radius:50%;background:var(--cyan-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;color:#000;">${STATE.currentUser.full_name?.charAt(0).toUpperCase() || 'U'}</div>
-        <span style="font-size:0.8rem;color:var(--text-secondary);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${STATE.currentUser.full_name?.split(' ')[0] || 'Student'}</span>
+        <span style="font-size:0.8rem;color:var(--text-secondary);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${STATE.currentUser.full_name?.split(' ')[0] || 'User'}</span>
         <button class="btn btn-secondary btn-sm" onclick="logoutUser()" style="font-size:0.7rem;padding:0.2rem 0.5rem;">Logout</button>
       </div>
     `;
+    if (STATE.currentUser.role === 'admin') {
+      showAdminNav();
+    } else {
+      hideAdminNav();
+    }
   } else {
+    if (loginBtn) loginBtn.style.display = 'inline-block';
+    hideAdminNav();
     container.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openRegisterModal()">Register Free</button>';
   }
 }
@@ -138,8 +155,10 @@ function updateAuthUI() {
 function logoutUser() {
   STATE.currentUser = null;
   STATE.userToken = null;
+  STATE.adminToken = null;
   localStorage.removeItem('ai60_user');
   localStorage.removeItem('ai60_user_token');
+  localStorage.removeItem('ai60_admin_token');
   updateAuthUI();
   switchView('landing');
   showToast('Logged out successfully.');
@@ -150,24 +169,56 @@ function showAdminNav() {
   if (adminNav) adminNav.style.display = 'flex';
 }
 
-async function loginAdmin(email, password) {
+function hideAdminNav() {
+  const adminNav = document.querySelector('.admin-nav');
+  if (adminNav) adminNav.style.display = 'none';
+}
+
+async function performLogin(email, password) {
+  const e = email || document.getElementById('login-email')?.value;
+  const p = password || document.getElementById('login-password')?.value;
+  const errEl = document.getElementById('login-error');
+  if (errEl) errEl.style.display = 'none';
+
   try {
-    const res = await fetch('/api/admin/login', {
+    const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: e, password: p })
     });
     const data = await res.json();
-    if (data.token) {
-      STATE.adminToken = data.token;
-      localStorage.setItem('ai60_admin_token', data.token);
-      showAdminNav();
-      await loadAdminData();
-      showToast('Admin access granted.');
+    
+    if (res.ok && data.token) {
+      STATE.currentUser = data.user;
+      STATE.userToken = data.token;
+      localStorage.setItem('ai60_user_token', data.token);
+      localStorage.setItem('ai60_user', JSON.stringify(data.user));
+      
+      updateAuthUI();
+      
+      if (data.user.role === 'admin') {
+        STATE.adminToken = data.token;
+        localStorage.setItem('ai60_admin_token', data.token);
+        await loadAdminData();
+        switchView('admin');
+        showToast('Admin access granted.');
+      } else {
+        switchView('student');
+        showToast('Welcome back!');
+      }
       return true;
+    } else {
+      if (errEl) {
+        errEl.textContent = data.error || 'Login failed';
+        errEl.style.display = 'block';
+      }
     }
   } catch (err) {
-    console.error('Admin login error:', err);
+    if (errEl) {
+      errEl.textContent = 'Network error during login';
+      errEl.style.display = 'block';
+    }
+    console.error('Login error:', err);
   }
   return false;
 }
@@ -180,7 +231,7 @@ function showToast(message, type = 'success') {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <span>${message}</span>`;
+  toast.innerHTML = `<span>${message}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -288,21 +339,39 @@ function prevQuizQuestion() {
   }
 }
 
+function getQuizTrack() {
+  // Simple direction mapping from the branch answer (Q2). Not a score; personalization will be improved later.
+  const branchIdx = STATE.quizAnswers[1];
+  const beginner = STATE.quizAnswers[0] === 0 || STATE.quizAnswers[4] === 2;
+  const guide = beginner ? ' Guided, step-by-step build.' : ' Includes room to go deeper.';
+  if (branchIdx === 0) {
+    return { name: 'AI Resume Feedback Assistant', desc: 'Track: AI App Developer \u2014 build an LLM-powered web app that analyses resume text.' + guide };
+  }
+  if (branchIdx === 1) {
+    return { name: 'AI Study & Lab Helper', desc: 'Track: Engineering Productivity \u2014 build an AI helper for notes, lab reports or datasheets.' + guide };
+  }
+  if (branchIdx === 2) {
+    return { name: 'AI Domain Q&A Assistant', desc: 'Track: Domain Automation \u2014 build an AI assistant for a problem in your own engineering field.' + guide };
+  }
+  return { name: 'AI Campus Helper', desc: 'Track: Everyday AI Tools \u2014 build a simple AI tool that solves a campus problem.' + guide };
+}
+
 function finishQuiz() {
   document.getElementById('quiz-question-box').style.display = 'none';
   document.getElementById('quiz-result-box').style.display = 'block';
 
-  const avgScore = Math.round(STATE.quizScores.reduce((a, b) => a + b, 0) / STATE.quizScores.length);
-  document.getElementById('fit-score-val').textContent = `${avgScore}%`;
+  const track = getQuizTrack();
+  document.getElementById('quiz-rec-project').textContent = track.name;
+  document.getElementById('quiz-rec-desc').textContent = track.desc;
+  document.getElementById('fit-score-reason').textContent = 'Based on your answers, this is the project direction we suggest for the 60-minute build.';
 
-  // Submit quiz attempt to backend
+  // Submit quiz attempt to backend (no score; track only)
   fetch('/api/quiz/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       answers: STATE.quizAnswers,
-      score: avgScore,
-      fit_message: `Qualified at ${avgScore}% match`
+      fit_message: `Recommended track: ${track.name}`
     })
   }).catch(e => console.warn('Quiz submit err', e));
 }
@@ -330,7 +399,7 @@ async function handleRegistrationSubmit(event) {
   const errEl = document.getElementById('reg-error-msg');
   errEl.style.display = 'none';
   btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span> Securing Your Seat...';
+  btn.innerHTML = 'Securing Your Seat...';
 
   const payload = {
     full_name: document.getElementById('reg-name').value.trim(),
@@ -342,8 +411,7 @@ async function handleRegistrationSubmit(event) {
     referral_code: document.getElementById('reg-refcode').value.trim() || REF_PARAM,
     utm_source: UTM_SOURCE,
     utm_campaign: UTM_CAMPAIGN,
-    ambassador_code: AMB_PARAM,
-    quiz_score: STATE.quizScores ? Math.round(STATE.quizScores.reduce((a,b)=>a+b,0)/STATE.quizScores.length) : 90
+    ambassador_code: AMB_PARAM
   };
 
   try {
@@ -376,7 +444,7 @@ async function handleRegistrationSubmit(event) {
     errEl.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>⚡</span> Confirm Free Registration';
+    btn.innerHTML = 'Confirm Free Registration';
   }
 }
 
@@ -386,7 +454,7 @@ function updateSeatDisplays() {
 
 function openSuccessModal(user) {
   const modal = document.getElementById('modal-success');
-  const refUrl = `${window.location.origin}/?ref=${user.referral_code}`;
+  const refUrl = `${window.location.origin}/r/${user.referral_code}`;
   document.getElementById('success-ref-url').textContent = refUrl;
   modal.classList.add('open');
 }
@@ -400,8 +468,8 @@ function copySuccessLink() {
 
 function shareSuccessWhatsApp() {
   const code = STATE.currentUser?.referral_code || '';
-  const url = `${window.location.origin}/?ref=${code}`;
-  const text = encodeURIComponent(`Hey! I just registered for the free AI60 workshop: Build Your First AI Project in 60 Minutes. Join with my link: ${url}`);
+  const url = `${window.location.origin}/r/${code}`;
+  const text = encodeURIComponent(`I'm joining NxtWave's free AI project workshop. You can register here: ${url}`);
   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
@@ -421,7 +489,7 @@ function updateStudentViewWithUser(user) {
   document.getElementById('student-college-display').textContent = `${user.college} • ${user.branch || 'Engineering'}`;
   document.getElementById('student-ref-code-display').textContent = user.referral_code;
 
-  const refUrl = `${window.location.origin}/?ref=${user.referral_code}`;
+  const refUrl = `${window.location.origin}/r/${user.referral_code}`;
   document.getElementById('student-ref-url-display').textContent = refUrl;
 }
 
@@ -434,11 +502,85 @@ async function refreshStudentDashboard() {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.referral_stats) {
-        document.getElementById('student-invited-count').textContent = data.referral_stats.total_referrals || 0;
-        document.getElementById('student-registered-count').textContent = data.referral_stats.successful || 0;
-        const rate = data.referral_stats.total_referrals ? Math.round((data.referral_stats.successful / data.referral_stats.total_referrals) * 100) : 0;
-        document.getElementById('student-conv-rate').textContent = `${rate}%`;
+      if (data.referrals) {
+        const clicks = data.referrals.clicks !== undefined ? data.referrals.clicks : (data.referrals.total || 0);
+        const successful = data.referrals.successful || 0;
+        
+        document.getElementById('student-invited-count').textContent = clicks;
+        document.getElementById('student-registered-count').textContent = successful;
+        const rate = clicks > 0 ? Math.round((successful / clicks) * 100) : 0;
+        document.getElementById('student-conv-rate').textContent = clicks > 0 ? `${rate}%` : '0%';
+        
+        const mp = document.getElementById('milestone-progress-text');
+        if (mp) mp.textContent = `${successful} Verified Referrals`;
+
+        // Update milestone unlock states
+        const ms3 = document.getElementById('ms-card-3');
+        const ms5 = document.getElementById('ms-card-5');
+        const ms10 = document.getElementById('ms-card-10');
+        const ms25 = document.getElementById('ms-card-25');
+
+        if (ms3) {
+          if (successful >= 3) {
+            ms3.classList.add('unlocked');
+            document.getElementById('ms-badge-3').textContent = 'UNLOCKED';
+            document.getElementById('ms-badge-3').className = 'card-tag badge-unlocked';
+          } else {
+            ms3.classList.remove('unlocked');
+            document.getElementById('ms-badge-3').textContent = 'LOCKED';
+            document.getElementById('ms-badge-3').className = 'card-tag';
+          }
+        }
+
+        if (ms5) {
+          if (successful >= 5) {
+            ms5.classList.add('unlocked');
+            document.getElementById('ms-badge-5').textContent = 'UNLOCKED';
+            document.getElementById('ms-badge-5').className = 'card-tag badge-unlocked';
+          } else {
+            ms5.classList.remove('unlocked');
+            document.getElementById('ms-badge-5').textContent = 'LOCKED';
+            document.getElementById('ms-badge-5').className = 'card-tag';
+          }
+        }
+
+        if (ms10) {
+          if (successful >= 10) {
+            ms10.classList.add('unlocked');
+            document.getElementById('ms-badge-10').textContent = 'UNLOCKED';
+            document.getElementById('ms-badge-10').className = 'card-tag badge-unlocked';
+          } else {
+            ms10.classList.remove('unlocked');
+            document.getElementById('ms-badge-10').textContent = 'LOCKED';
+            document.getElementById('ms-badge-10').className = 'card-tag';
+          }
+        }
+
+        if (ms25) {
+          if (successful >= 25) {
+            ms25.classList.add('unlocked');
+            document.getElementById('ms-badge-25').textContent = 'UNLOCKED';
+            document.getElementById('ms-badge-25').className = 'card-tag badge-unlocked';
+          } else {
+            ms25.classList.remove('unlocked');
+            document.getElementById('ms-badge-25').textContent = 'LOCKED';
+            document.getElementById('ms-badge-25').className = 'card-tag';
+          }
+        }
+
+        // Update rank position
+        const rankEl = document.getElementById('student-rank-position-text');
+        const refCountEl = document.getElementById('student-rank-ref-count');
+        if (refCountEl) refCountEl.textContent = successful;
+        if (rankEl) {
+          if (data.referrals.rank && data.referrals.rank > 0 && successful > 0) {
+            rankEl.textContent = `Rank #${data.referrals.rank}`;
+            rankEl.style.color = 'var(--emerald-primary)';
+          } else {
+            rankEl.textContent = 'Not ranked (0 verified referrals)';
+            rankEl.style.color = 'var(--text-muted)';
+          }
+        }
       }
     }
   } catch (err) {
@@ -454,16 +596,114 @@ function copyReferralLink() {
 }
 
 function shareReferralWhatsApp() {
-  const code = STATE.currentUser?.referral_code || document.getElementById('student-ref-code-display').textContent || 'AMR882';
-  const url = `${window.location.origin}/?ref=${code}`;
-  const text = encodeURIComponent(`Hey! I just registered for the free AI60 workshop: Build Your First AI Project in 60 Minutes. Join with my invite link to unlock the project starter repos: ${url}`);
+  const shown = document.getElementById('student-ref-code-display').textContent;
+  const code = STATE.currentUser?.referral_code || (shown && shown !== '\u2014' ? shown : '');
+  if (!code) { showToast('Register first to get your referral link.', 'error'); return; }
+  const url = `${window.location.origin}/r/${code}`;
+  const text = encodeURIComponent(`I'm joining NxtWave's free AI project workshop. You can register here: ${url}`);
   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
+// ============================================================================
+// AI60 STUDENT ASSISTANT (LIGHTWEIGHT GROUNDED RAG)
+// ============================================================================
+function sendQuickPrompt(promptText) {
+  document.getElementById('chat-input-text').value = promptText;
+  sendChatMessage();
+}
 
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input-text');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const box = document.getElementById('chat-messages-box');
+  // Append user bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  userBubble.textContent = msg;
+  box.appendChild(userBubble);
+  input.value = '';
+  box.scrollTop = box.scrollHeight;
+
+  // Typing placeholder
+  const botBubble = document.createElement('div');
+  botBubble.className = 'chat-bubble bot';
+  botBubble.innerHTML = '<em>Searching AI60 verified knowledge base...</em>';
+  box.appendChild(botBubble);
+  box.scrollTop = box.scrollHeight;
+
+  try {
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    
+    if (data.status === 'unavailable') {
+      botBubble.innerHTML = `<div>AI Assistant is currently unavailable.</div><div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.35rem;">No runtime AI provider configured.</div>`;
+    } else {
+      const respText = data.response || "I don't have that information in the AI60 knowledge base.";
+      const prov = '';
+      botBubble.innerHTML = `<div>${escapeHtml(respText)}</div>${prov}`;
+    }
+  } catch (err) {
+    botBubble.innerHTML = `<div>AI Assistant is currently unavailable.</div>`;
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 // ============================================================================
-// LEADERBOARD
+// AI PROJECT IDEA GENERATOR
+// ============================================================================
+async function generateProjectIdea() {
+  const domain = document.getElementById('idea-domain').value;
+  const skill = document.getElementById('idea-skill').value;
+  const resBox = document.getElementById('idea-result-box');
+
+  try {
+    const res = await fetch('/api/ai/project-idea', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain, skill_level: skill, branch: 'CSE' })
+    });
+    const data = await res.json();
+    const idea = data.idea;
+    if (idea) {
+      document.getElementById('idea-title').textContent = idea.title;
+      document.getElementById('idea-difficulty').textContent = idea.difficulty;
+      document.getElementById('idea-problem').textContent = idea.problem;
+      document.getElementById('idea-mvp').textContent = idea.sixty_min_mvp;
+      resBox.style.display = 'block';
+      STATE.currentIdea = idea;
+    } else {
+      showToast(data.message || 'Project ideas are not available right now.', 'error');
+    }
+  } catch (e) {
+    showToast('Could not generate a project idea right now.', 'error');
+  }
+}
+
+async function saveProjectIdea() {
+  if (!STATE.currentIdea) return;
+  const token = localStorage.getItem('ai60_user_token');
+  if (token) {
+    await fetch('/api/ai/save-idea', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ idea: STATE.currentIdea })
+    }).catch(e => console.warn(e));
+  }
+  showToast('Project idea saved to your student profile!');
+}
+
+// ============================================================================
+// TOP 3 REFERRAL LEADERBOARD (REAL DATABASE VALUES)
 // ============================================================================
 async function loadLeaderboard() {
   try {
@@ -476,16 +716,26 @@ async function loadLeaderboard() {
 
     const list = data.leaderboard || [];
 
-    list.slice(0, 5).forEach((item, idx) => {
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1.5rem;">No verified referrals yet. Share your referral link to take the lead.</td></tr>';
+      return;
+    }
+
+    list.slice(0, 10).forEach((item, idx) => {
       const tr = document.createElement('tr');
-      const badgeIcon = idx === 0 ? '🥇 Gold' : idx === 1 ? '🥈 Silver' : idx === 2 ? '🥉 Bronze' : '⭐ Builder';
+      const rankNum = idx + 1;
+      let badgeTag = '<span class="card-tag">Builder</span>';
+      if (rankNum === 1) badgeTag = '<span class="card-tag badge-top3-1">1st Rank (₹1,000 Pool)</span>';
+      else if (rankNum === 2) badgeTag = '<span class="card-tag badge-top3-2">2nd Rank (₹600 Pool)</span>';
+      else if (rankNum === 3) badgeTag = '<span class="card-tag badge-top3-3">3rd Rank (₹400 Pool)</span>';
+
       tr.innerHTML = `
-        <td><strong style="color:var(--cyan-primary)">#${idx + 1}</strong></td>
-        <td><strong>${item.full_name}</strong></td>
-        <td>${item.college}</td>
-        <td>${item.branch || 'CSE'}</td>
-        <td><strong style="color:var(--emerald-primary);">${item.referral_count}</strong> Referrals</td>
-        <td><span class="card-tag">${badgeIcon}</span></td>
+        <td><strong style="color:${rankNum <= 3 ? 'var(--cyan-primary)' : 'var(--text-muted)'}">#${rankNum}</strong></td>
+        <td><strong>${escapeHtml(item.full_name || 'Anonymous Student')}</strong></td>
+        <td>${escapeHtml(item.college || '\u2014')}</td>
+        <td>${escapeHtml(item.branch || 'Engineering')}</td>
+        <td><strong style="color:var(--emerald-primary);">${item.referral_count}</strong> Verified</td>
+        <td>${badgeTag}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -494,7 +744,37 @@ async function loadLeaderboard() {
   }
 }
 
+// ============================================================================
+// WORKSHOP ROOM
+// ============================================================================
+function updateWorkshopMilestones() {
+  const checks = [
+    document.getElementById('check-1').checked,
+    document.getElementById('check-2').checked,
+    document.getElementById('check-3').checked,
+    document.getElementById('check-4').checked
+  ];
+  const completed = checks.filter(Boolean).length;
+  const pct = Math.round((completed / 4) * 100);
 
+  document.getElementById('workshop-progress-pct').textContent = `${pct}% Complete`;
+  document.getElementById('workshop-progress-fill').style.width = `${pct}%`;
+
+  // Persist to backend if student logged in
+  const token = localStorage.getItem('ai60_user_token');
+  if (token) {
+    fetch('/api/workshop/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ progress: pct, status: pct === 100 ? 'completed' : 'in_progress' })
+    }).catch(e => console.warn(e));
+  }
+}
+
+// Stream toggle placeholder
+function toggleStreamSimulation() {
+  showToast('Workshop stream will begin when the session starts.');
+}
 
 // ============================================================================
 // PROJECT SUBMISSION & AUTOMATED AI EVALUATION
@@ -515,32 +795,43 @@ async function submitProjectForEvaluation() {
     return;
   }
 
-  showToast('Submitting project and running AI evaluation...');
+  showToast('Submitting project...');
 
   try {
     // Submit the project
     const subRes = await fetch('/api/project/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ project_name: title, description: desc, github_url: github, tech_stack: stack, ai_usage: 'LLM API integration' })
+      body: JSON.stringify({ project_name: title, description: desc, github_url: github, tech_stack: stack, ai_usage: document.getElementById('sub-ai-usage').value.trim() || null })
     });
     const subData = await subRes.json();
     if (!subRes.ok) throw new Error(subData.error || 'Submission failed');
 
-    // Request AI evaluation
+    // Request evaluation (server returns evaluation: null when no real evaluator is available)
     const evalRes = await fetch('/api/project/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ project_id: subData.project?.id || subData.id })
     });
     const evalData = await evalRes.json();
-    const ev = evalData.evaluation || {};
+    const ev = evalData.evaluation;
 
     document.getElementById('eval-proj-title').textContent = title;
-    document.getElementById('eval-overall-score').textContent = ev.score || 0;
+    if (ev && typeof ev.score === 'number') {
+      document.getElementById('eval-overall-score').textContent = ev.score;
+      document.getElementById('score-clarity').textContent = `${ev.problem_clarity}%`;
+      document.getElementById('score-ai').textContent = `${ev.ai_usage_score}%`;
+      document.getElementById('score-func').textContent = `${ev.functionality}%`;
+      document.getElementById('score-ux').textContent = `${ev.ux_score}%`;
+      document.getElementById('score-orig').textContent = `${ev.originality}%`;
+      document.getElementById('score-tech').textContent = `${ev.technical}%`;
+      document.getElementById('score-comp').textContent = `${ev.completeness}%`;
+      showToast(`Project evaluated. Overall: ${ev.score}/100.`);
+    } else {
+      showToast('Project submitted. Automated evaluation is not available yet.');
+    }
 
     document.getElementById('eval-result-container').scrollIntoView({ behavior: 'smooth' });
-    showToast(`Evaluation Complete! Overall Score: ${ev.score || 0}/100.`);
   } catch (err) {
     showToast(err.message || 'Failed to submit project.', 'error');
   }
@@ -548,17 +839,17 @@ async function submitProjectForEvaluation() {
 
 function shareBuildOnWhatsApp() {
   const title = document.getElementById('eval-proj-title').textContent;
-  const score = document.getElementById('eval-overall-score').textContent;
   const code = STATE.currentUser?.referral_code || 'AI60';
   const url = `${window.location.origin}/?ref=${code}`;
-  const text = encodeURIComponent(`🚀 I just built and deployed "${title}" in 60 minutes at the AI60 sprint! Automated AI Rubric Score: ${score}/100. Build your first AI project too: ${url}`);
+  const projectPart = title && title !== '\u2014' ? `I just built "${title}" in the AI60 workshop. ` : '';
+  const text = encodeURIComponent(`${projectPart}Build your first AI project in 60 minutes too: ${url}`);
   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
 function copyBuildBadgeLink() {
   const url = `${window.location.origin}/#submit`;
   navigator.clipboard.writeText(url).then(() => {
-    showToast('Verified Builder Badge link copied to clipboard!');
+    showToast('Referral link copied to clipboard!');
   });
 }
 
@@ -576,13 +867,44 @@ async function loadAdminData() {
     });
     if (aRes.ok) {
       const aData = await aRes.json();
-      if (aData.metrics) {
-        const total = aData.metrics.total_registrations || 0;
-        STATE.registeredCount = total;
-        document.getElementById('admin-total-reg').textContent = total;
-        document.getElementById('admin-gap-reg').textContent = 'N/A';
-        document.getElementById('admin-referral-reg').textContent = aData.metrics.referral_registrations || 0;
+      const reg = aData.registrations || {};
+      const targetData = aData.target || { total: 500, remaining: 500 };
+      const total = reg.total || 0;
+      STATE.registeredCount = total;
+      
+      const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+      setEl('admin-total-reg', total);
+      setEl('admin-remaining-reg', targetData.remaining);
+      setEl('admin-referral-reg', reg.referral || 0);
+      setEl('admin-referral-clicks', reg.referral_clicks || 0);
+      
+      const refRate = (reg.referral_clicks > 0) ? Math.round((reg.referral / reg.referral_clicks) * 100) : 0;
+      setEl('admin-conv-rate', reg.referral_clicks > 0 ? `${refRate}%` : '\\u2013');
+
+      const f = aData.funnel || {};
+      setEl('funnel-visitors', f.page_views || 0);
+      setEl('funnel-quiz-start', f.quiz_started || 0);
+      setEl('funnel-quiz-done', f.quiz_completed || 0);
+      setEl('funnel-registered', total);
+      setEl('funnel-referrals', reg.referral || 0);
+      setEl('funnel-attendees', '\u2014');
+
+      // Update 300-400 Referral Target Metrics
+      const refObserved = reg.referral || 0;
+      setEl('growth-target-ref-observed', refObserved);
+      setEl('growth-target-rem-300', Math.max(0, 300 - refObserved));
+      setEl('growth-target-rem-400', Math.max(0, 400 - refObserved));
+
+      const ctb = document.getElementById('admin-channel-tbody');
+      if (ctb) {
+        const chans = aData.channels || [];
+        ctb.innerHTML = chans.length
+          ? chans.map(c => `<tr><td><strong>${c.channel}</strong></td><td>${c.count}</td><td>\u2014</td><td>\u2014</td><td>${total ? ((c.count / total) * 100).toFixed(1) : 0}%</td></tr>`).join('')
+          : '<tr><td colspan="5" style="color:var(--text-muted);">No tracked registrations yet.</td></tr>';
       }
+      
+      // Initialize simulator with defaults
+      runCampaignSimulation();
     }
 
     // 2. Fetch Registrations Table
@@ -602,6 +924,15 @@ async function loadAdminData() {
     if (ambRes.ok) {
       const ambData = await ambRes.json();
       renderAmbassadorsTable(ambData.ambassadors || []);
+    }
+
+    // 4. Fetch Experiments
+    const expRes = await fetch('/api/admin/experiments', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (expRes.ok) {
+      const expData = await expRes.json();
+      renderExperimentsList(expData.experiments || []);
     }
   } catch (err) {
     console.warn('Admin data load err', err);
@@ -660,51 +991,379 @@ function renderAmbassadorsTable(ambs) {
       <td>${a.visits}</td>
       <td><strong style="color:var(--emerald-primary);">${a.registrations}</strong></td>
       <td>${conv}%</td>
-      <td><span class="card-tag" style="background:var(--emerald-surface); color:var(--emerald-primary);">Active Partner</span></td>
+      <td><span class="card-tag">${a.status || 'Partner'}</span></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// ============================================================================
-// MESSAGE STUDIO
-// ============================================================================
-function generateMessageVariants() {
-  const container = document.getElementById('message-variants-container');
-  const audience = document.getElementById('msg-audience').value;
-  const tone = document.getElementById('msg-tone').value;
-  
+function renderExperimentsList(exps) {
+  const container = document.getElementById('admin-experiments-list');
   if (!container) return;
-  
-  showToast('Generating AI variants...');
-  
-  // Simulated AI response for Message Studio
-  setTimeout(() => {
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.gap = '1rem';
-    
-    container.innerHTML = `
-      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 1 (Direct)</div>
-        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Join us for the AI60 Workshop! Build your first AI project in 60 minutes and boost your resume. Link: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var1</p>
-        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
+  container.innerHTML = '';
+
+  if (exps.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;">No A/B experiments configured yet.</div>';
+    return;
+  }
+  exps.forEach(e => {
+    const card = document.createElement('div');
+    card.style.background = 'var(--bg-surface)';
+    card.style.borderRadius = 'var(--radius-md)';
+    card.style.padding = '1rem';
+    card.style.border = '1px solid var(--border-light)';
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+        <strong style="color:var(--text-white); font-size:0.9rem;">${e.name}</strong>
+        <span class="card-tag" style="background:rgba(16,185,129,0.15); color:var(--emerald-primary);">${e.status || 'Active Test'}</span>
       </div>
-      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 2 (${tone} angle)</div>
-        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Only a few seats left! Don't miss out on building a real AI app this weekend. Link: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var2</p>
-        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
-      </div>
-      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 3 (Value driven)</div>
-        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Learn prompt engineering and API integration in just 1 hour. No prior AI experience needed. Register free: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var3</p>
-        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
+      <div style="font-size:0.78rem; color:var(--text-secondary); display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:0.4rem;">
+        <div style="background:var(--bg-card); padding:0.5rem; border-radius:var(--radius-sm);">
+          <strong>Variant A:</strong> "${e.variant_a}"<br>
+          <span style="color:var(--emerald-primary); font-weight:600;">${e.variant_a_registrations || 0} Regs</span>
+        </div>
+        <div style="background:var(--bg-card); padding:0.5rem; border-radius:var(--radius-sm);">
+          <strong>Variant B:</strong> "${e.variant_b}"<br>
+          <span style="color:var(--cyan-primary); font-weight:600;">${e.variant_b_registrations || 0} Regs</span>
+        </div>
       </div>
     `;
-  }, 1000);
+    container.appendChild(card);
+  });
 }
 
+async function generateAiInsights() {
+  const btn = document.getElementById('btn-copilot-analyze');
+  if (btn) btn.textContent = 'Analyzing campaign data...';
+  if (btn) btn.disabled = true;
 
+  const box = document.getElementById('ai-insights-box');
+  const provBox = document.getElementById('ai-provenance-box');
+
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  try {
+    const simBaseTotal = document.getElementById('sim-out-base-total')?.textContent;
+    const simBaseCpa = document.getElementById('sim-out-base-cpa')?.textContent;
+    const payload = {
+      simulator: simBaseTotal && simBaseTotal !== '0' ? { base_projected_total: parseInt(simBaseTotal), base_projected_cpa: simBaseCpa } : null
+    };
+
+    const res = await fetch('/api/admin/growth-copilot', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await res.json();
+    
+    if (data.status === 'unavailable' || !res.ok) {
+      box.innerHTML = `<div style="background:var(--bg-surface); padding:1rem; border-left:3px solid var(--amber-primary); color:var(--text-white);">AI Growth Copilot is temporarily unavailable.</div>`;
+      if (provBox) provBox.style.display = 'none';
+      return;
+    }
+
+    if (data.status === 'success' && data.analysis) {
+      if (provBox) {
+        provBox.style.display = 'block';
+        document.getElementById('ai-prov-reg').textContent = data.metrics.registrations;
+        document.getElementById('ai-prov-target').textContent = data.metrics.target;
+        document.getElementById('ai-prov-ref-clicks').textContent = data.metrics.referral_clicks;
+        document.getElementById('ai-prov-ref-conv').textContent = data.metrics.referral_conversions;
+        
+        if (payload.simulator) {
+          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live campaign data + Simulator projections (assumptions, not measured results)';
+        } else {
+          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live campaign data';
+        }
+      }
+
+      const ai = data.analysis;
+      let html = `<div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1rem; border-left:3px solid var(--cyan-primary);">
+        <h4 style="margin-bottom:0.5rem; color:var(--text-white);">Campaign Summary</h4>
+        <p style="color:var(--text-secondary); font-size:0.85rem;">${ai.summary || ''}</p>
+      </div>`;
+      
+      if (ai.priorities && ai.priorities.length > 0) {
+        html += `<h4 style="margin-bottom:0.5rem;">Top Priorities</h4><div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">`;
+        ai.priorities.forEach(p => {
+          html += `<div style="background:var(--bg-dark); border:1px solid var(--border-light); padding:0.75rem; border-radius:var(--radius-sm);">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="font-weight:600; color:var(--text-white); font-size:0.85rem;">${p.action}</span>
+              <span style="font-size:0.75rem; padding:0.15rem 0.4rem; background:var(--bg-surface); border-radius:4px;">${p.expected_impact} Impact</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.4rem;">${p.reason}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      
+      if (ai.channel_recommendation) {
+        html += `<div style="background:var(--bg-dark); border:1px solid var(--emerald-primary); padding:0.75rem; border-radius:var(--radius-sm); margin-bottom:1rem;">
+          <h4 style="color:var(--emerald-primary); margin-bottom:0.25rem;">Channel Focus: ${ai.channel_recommendation.focus}</h4>
+          <p style="color:var(--text-secondary); font-size:0.8rem;">${ai.channel_recommendation.reason}</p>
+        </div>`;
+      }
+
+      if (ai.experiment) {
+        html += `<div style="background:var(--bg-dark); border:1px solid var(--purple-primary); padding:0.75rem; border-radius:var(--radius-sm); margin-bottom:1rem;">
+          <h4 style="color:var(--purple-primary); margin-bottom:0.25rem;">Experiment Idea</h4>
+          <p style="color:var(--text-white); font-size:0.85rem; margin-bottom:0.25rem;">${ai.experiment.idea}</p>
+          <div style="display:flex; gap:1rem; font-size:0.75rem; color:var(--text-muted);">
+            <span>Metric: ${ai.experiment.metric}</span>
+            <span>Timeframe: ${ai.experiment.timeframe}</span>
+          </div>
+        </div>`;
+      }
+      
+      if (ai.warning) {
+        html += `<div style="background:var(--bg-dark); border-left:3px solid var(--amber-primary); padding:0.75rem; border-radius:var(--radius-sm); font-size:0.8rem;">
+          <strong style="color:var(--amber-primary);">Caveat:</strong> <span style="color:var(--text-secondary);">${ai.warning}</span>
+        </div>`;
+      }
+
+      box.innerHTML = html;
+      showToast('AI analysis complete.');
+    }
+  } catch (e) {
+    box.innerHTML = `<div style="background:var(--bg-surface); padding:1rem; border-left:3px solid var(--amber-primary); color:var(--text-white);">AI Growth Copilot is temporarily unavailable.</div>`;
+    showToast('Could not fetch AI insights.', 'error');
+  } finally {
+    if (btn) btn.textContent = 'Analyze Campaign';
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function exportCsv(type) {
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  if (!token) {
+    showToast('Admin access required for export', 'error');
+    return;
+  }
+  
+  showToast(`Preparing ${type} export...`);
+  try {
+    const res = await fetch(`/api/admin/export/${type}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}_export.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast(`${type} exported successfully!`);
+    } else {
+      showToast('Export failed. Check console.', 'error');
+    }
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('Network error during export.', 'error');
+  }
+}
+
+function exportRegistrationsCsv() {
+  exportCsv('registrations');
+}
+
+function exportReferralsCsv() {
+  exportCsv('referrals');
+}
+
+// Multichannel Messages
+const MSG_TEMPLATES = {
+  reminder_24h: "Your AI60 workshop starts in 24 hours! Keep your laptop ready. Know a friend who wants to build too? Share your link: {{referral_url}}",
+  referral_booster: "Invite your batchmates to the free AI60 workshop. Your personal link: {{referral_url}}",
+  final_1h: "The AI60 workshop starts in 1 hour! Get ready to build your first AI project in 60 minutes. Join here: {{workshop_url}}"
+};
+
+function loadMessageTemplate() {
+  const sel = document.getElementById('msg-template-select').value;
+  const body = document.getElementById('msg-body');
+  if (MSG_TEMPLATES[sel]) body.value = MSG_TEMPLATES[sel];
+}
+
+async function sendBroadcastMessage() {
+  // Saves a DRAFT only. Nothing is sent to students.
+  const audience = document.getElementById('msg-audience').value;
+  const body = document.getElementById('msg-body').value;
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+
+  try {
+    const res = await fetch('/api/admin/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ body, audience_filter: audience, channel: 'whatsapp' })
+    });
+    if (!res.ok) throw new Error('save failed');
+    document.getElementById('msg-status-text').textContent = 'Draft saved \u2013 not sent';
+    showToast('Message draft saved. It has not been sent.');
+  } catch (err) {
+    document.getElementById('msg-status-text').textContent = 'Failed to save draft';
+  }
+}
+
+// ============================================================================
+// AI HUB & OBSERVABILITY
+// ============================================================================
+async function loadAiHubData() {
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  if (!token) return;
+
+  try {
+    const healthRes = await fetch('/api/admin/ai/health', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (healthRes.ok) {
+      const data = await healthRes.json();
+      renderAiHealth(data.health);
+    }
+    const usageRes = await fetch('/api/admin/ai/usage', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (usageRes.ok) {
+      const data = await usageRes.json();
+      renderAiUsage(data.usage);
+    }
+    const kbRes = await fetch('/api/admin/knowledge', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (kbRes.ok) {
+      const data = await kbRes.json();
+      renderKnowledgeBase(data.knowledge);
+    }
+  } catch (err) {
+    console.warn('AI Hub load error', err);
+  }
+}
+
+function renderAiHealth(health) {
+  const container = document.getElementById('ai-health-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  if (!health || Object.keys(health).length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No providers configured.</div>';
+    return;
+  }
+  
+  Object.keys(health).forEach(provider => {
+    const info = health[provider];
+    const isHealthy = info.status === 'HEALTHY';
+    const row = document.createElement('div');
+    row.style = `display:flex; justify-content:space-between; padding:0.75rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); margin-bottom:0.5rem;`;
+    row.innerHTML = `
+      <div>
+        <strong>${provider}</strong>
+        <div style="font-size:0.75rem; color:var(--text-muted);">${info.model || 'Unknown model'}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end;">
+        <span class="card-tag" style="background:${isHealthy ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${isHealthy ? 'var(--emerald-primary)' : 'var(--red-primary)'};">${info.status}</span>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderAiUsage(logs) {
+  if (!logs) return;
+  const totalRequests = logs.length;
+  const fallbacks = logs.filter(l => l.fallback_used).length;
+  const successes = logs.filter(l => l.status === 'SUCCESS').length;
+  
+  const fallbackRate = totalRequests > 0 ? Math.round((fallbacks / totalRequests) * 100) : 0;
+  const successRate = totalRequests > 0 ? Math.round((successes / totalRequests) * 100) : 0;
+  
+  document.getElementById('ai-total-requests').textContent = totalRequests;
+  document.getElementById('ai-fallback-rate').textContent = `${fallbackRate}%`;
+  document.getElementById('ai-success-rate').textContent = `${successRate}%`;
+  
+  // Fake cost estimation based on logs
+  const cost = (totalRequests * 0.05).toFixed(2);
+  document.getElementById('ai-est-cost').textContent = `₹${cost}`;
+}
+
+async function triggerFailureSim(provider) {
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  try {
+    const res = await fetch('/api/admin/ai/simulate-failure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ provider: provider.charAt(0).toUpperCase() + provider.slice(1) })
+    });
+    if (res.ok) {
+      showToast(`Simulated outage for ${provider}. Will auto-recover in 60s.`);
+      setTimeout(loadAiHubData, 1000);
+    }
+  } catch(e) {}
+}
+
+async function runSimulationTest() {
+  const resEl = document.getElementById('sim-test-result');
+  resEl.style.display = 'block';
+  resEl.textContent = 'Running fallback test (requesting project idea)...\n';
+  const token = localStorage.getItem('ai60_user_token'); // Needs user token
+  
+  try {
+    const res = await fetch('/api/ai/project-idea', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: 'Test Simulator', skill_level: 'Beginner', branch: 'CSE' })
+    });
+    const data = await res.json();
+    if (data.idea) {
+      resEl.textContent += `Success! Answered by: ${data.provider} (${data.model})\n`;
+      if (data.provider === 'DEMO') {
+        resEl.textContent += `Note: Responded in safe DEMO mode because all providers failed.`;
+      }
+    } else {
+      resEl.textContent += `Failed to generate project idea.`;
+    }
+    setTimeout(loadAiHubData, 1000);
+  } catch(e) {
+    resEl.textContent += `Request error: ${e.message}`;
+  }
+}
+
+async function addKnowledgeFact() {
+  const title = document.getElementById('kb-title').value.trim();
+  const content = document.getElementById('kb-content').value.trim();
+  if (!title || !content) return showToast('Please provide both title and content.', 'error');
+  
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  try {
+    const res = await fetch('/api/admin/knowledge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ title, content })
+    });
+    if (res.ok) {
+      document.getElementById('kb-title').value = '';
+      document.getElementById('kb-content').value = '';
+      showToast('Knowledge fact added successfully!');
+      loadAiHubData();
+    }
+  } catch(e) {}
+}
+
+function renderKnowledgeBase(kbList) {
+  const container = document.getElementById('kb-list-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  if (!kbList || kbList.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No knowledge facts added yet.</div>';
+    return;
+  }
+  
+  kbList.forEach(item => {
+    const row = document.createElement('div');
+    row.style = `padding:0.75rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); margin-bottom:0.5rem;`;
+    row.innerHTML = `
+      <div style="font-weight:700; margin-bottom:0.2rem;">${item.title}</div>
+      <div style="font-size:0.8rem; color:var(--text-secondary);">${item.content}</div>
+    `;
+    container.appendChild(row);
+  });
+}
 
 // ============================================================================
 // 5-SLIDE GROWTH STRATEGY DECK
@@ -739,3 +1398,167 @@ function toggleFaq(btn) {
   const card = btn.closest('.faq-card');
   card.classList.toggle('open');
 }
+
+// ============================================================================
+// CAMPAIGN STRATEGY SIMULATOR (MAX ₹2,000 BUDGET CAP)
+// ============================================================================
+function onSimBudgetChange(changedField) {
+  const paidEl = document.getElementById('sim-budget');
+  const poolEl = document.getElementById('sim-ref-pool');
+  const totalText = document.getElementById('sim-total-budget-text');
+  const warningEl = document.getElementById('sim-budget-warning');
+
+  let paid = Math.max(0, parseFloat(paidEl.value) || 0);
+  let pool = Math.max(0, parseFloat(poolEl.value) || 0);
+
+  if (paid + pool > 2000) {
+    if (changedField === 'paid') {
+      if (paid > 2000) paid = 2000;
+      pool = 2000 - paid;
+    } else {
+      if (pool > 2000) pool = 2000;
+      paid = 2000 - pool;
+    }
+    paidEl.value = paid;
+    poolEl.value = pool;
+    if (warningEl) warningEl.style.display = 'inline-block';
+  } else {
+    if (warningEl) warningEl.style.display = 'none';
+  }
+
+  const total = paid + pool;
+  if (totalText) totalText.textContent = `₹${total.toLocaleString('en-IN')}`;
+
+  runCampaignSimulation();
+}
+
+function runCampaignSimulation() {
+  const strategyEl = document.getElementById('sim-strategy');
+  const strategy = strategyEl ? strategyEl.value : 'hybrid';
+
+  const paidEl = document.getElementById('sim-budget');
+  const poolEl = document.getElementById('sim-ref-pool');
+  const warningEl = document.getElementById('sim-budget-warning');
+
+  let paidBudget = Math.max(0, parseFloat(paidEl.value) || 0);
+  let poolBudget = Math.max(0, parseFloat(poolEl.value) || 0);
+
+  // Sync inputs if strategy changed
+  if (strategy === 'paid') {
+    paidBudget = 2000;
+    poolBudget = 0;
+    if (paidEl) paidEl.value = 2000;
+    if (poolEl) poolEl.value = 0;
+  } else if (strategy === 'referral') {
+    paidBudget = 0;
+    poolBudget = 2000;
+    if (paidEl) paidEl.value = 0;
+    if (poolEl) poolEl.value = 2000;
+  }
+
+  if (paidBudget + poolBudget > 2000) {
+    paidBudget = Math.min(2000, paidBudget);
+    poolBudget = 2000 - paidBudget;
+    if (paidEl) paidEl.value = paidBudget;
+    if (poolEl) poolEl.value = poolBudget;
+    if (warningEl) warningEl.style.display = 'inline-block';
+  } else {
+    if (warningEl) warningEl.style.display = 'none';
+  }
+
+  const totalBudget = paidBudget + poolBudget;
+  const totalText = document.getElementById('sim-total-budget-text');
+  if (totalText) totalText.textContent = `₹${totalBudget.toLocaleString('en-IN')}`;
+
+  const cpc = Math.max(1, parseFloat(document.getElementById('sim-cpc').value) || 5);
+  const convRate = (parseFloat(document.getElementById('sim-conv').value) || 15) / 100;
+  const baseRefRate = parseFloat(document.getElementById('sim-ref-rate').value) || 0.5;
+  const organic = parseFloat(document.getElementById('sim-organic').value) || 30;
+
+  // Additional referral boost from incentive pool (up to +0.8 additional referrals per registrant if full 2k pool allocated)
+  const incentiveBoost = (poolBudget / 2000) * 0.8;
+  const effectiveRefRate = baseRefRate + incentiveBoost;
+
+  const stratLabel = document.getElementById('sim-active-strategy-label');
+  if (stratLabel) {
+    if (strategy === 'paid') stratLabel.textContent = 'Strategy 1: 100% Paid Ads';
+    else if (strategy === 'referral') stratLabel.textContent = 'Strategy 2: 100% Referral Pool';
+    else stratLabel.textContent = 'Strategy 3: Hybrid Allocation';
+  }
+
+  const scenarios = [
+    { id: 'cons', modifier: 0.8 },
+    { id: 'base', modifier: 1.0 },
+    { id: 'opt', modifier: 1.2 }
+  ];
+
+  scenarios.forEach(s => {
+    const paidClicks = Math.floor((paidBudget / cpc) * s.modifier);
+    const paidReg = Math.floor(paidClicks * (convRate * s.modifier));
+    const orgReg = Math.floor(organic * s.modifier);
+    const directReg = paidReg + orgReg;
+    
+    // Total referral registrations = directReg * effectiveRefRate * s.modifier
+    const refReg = Math.floor(directReg * effectiveRefRate * s.modifier);
+    const totalReg = directReg + refReg;
+    const cpa = totalReg > 0 ? (totalBudget / totalReg).toFixed(2) : 0;
+
+    const els = {
+      total: document.getElementById(`sim-out-${s.id}-total`),
+      paid: document.getElementById(`sim-out-${s.id}-paid`),
+      ref: document.getElementById(`sim-out-${s.id}-ref`),
+      cpa: document.getElementById(`sim-out-${s.id}-cpa`)
+    };
+    if (els.total) els.total.textContent = totalReg;
+    if (els.paid) els.paid.textContent = directReg;
+    if (els.ref) els.ref.textContent = refReg;
+    if (els.cpa) els.cpa.textContent = `₹${cpa}`;
+    
+    if (s.id === 'base') {
+      const gap = Math.max(0, 500 - totalReg);
+      const gapEl = document.getElementById('sim-out-gap');
+      if (gapEl) gapEl.textContent = gap;
+    }
+  });
+
+  // Populate Comparison Matrix Table (Base Scenario for all 3 strategies)
+  renderStrategyComparisonTable(cpc, convRate, baseRefRate, organic);
+}
+
+function renderStrategyComparisonTable(cpc, convRate, baseRefRate, organic) {
+  const tbody = document.getElementById('sim-strategy-comparison-tbody');
+  if (!tbody) return;
+
+  const strategies = [
+    { name: 'Strategy 1: 100% Paid Acquisition', paid: 2000, pool: 0, boost: 0 },
+    { name: 'Strategy 2: 100% Referral Pool (₹1k/₹600/₹400)', paid: 0, pool: 2000, boost: 0.8 },
+    { name: 'Strategy 3: Hybrid (₹1,000 Paid + ₹1,000 Pool)', paid: 1000, pool: 1000, boost: 0.4 }
+  ];
+
+  tbody.innerHTML = '';
+
+  strategies.forEach(st => {
+    const paidClicks = Math.floor(st.paid / cpc);
+    const paidReg = Math.floor(paidClicks * convRate);
+    const directReg = paidReg + organic;
+    const effRate = baseRefRate + st.boost;
+    const refReg = Math.floor(directReg * effRate);
+    const totalReg = directReg + refReg;
+    const totalBudget = st.paid + st.pool;
+    const costPerReg = totalReg > 0 ? (totalBudget / totalReg).toFixed(2) : '0.00';
+    const gap = Math.max(0, 500 - totalReg);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${st.name}</strong></td>
+      <td>₹${st.paid.toLocaleString('en-IN')} Ads + ₹${st.pool.toLocaleString('en-IN')} Pool (₹${totalBudget})</td>
+      <td>${directReg} <span style="font-size:0.75rem; color:var(--text-muted);">(${paidReg} paid + ${organic} org)</span></td>
+      <td><strong style="color:var(--emerald-primary);">${refReg}</strong></td>
+      <td><strong style="font-size:1.05rem; color:var(--text-white);">${totalReg}</strong></td>
+      <td style="color:var(--cyan-primary);">₹${costPerReg}</td>
+      <td style="color:${gap === 0 ? 'var(--emerald-primary)' : 'var(--amber-primary)'}; font-weight:600;">${gap}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+

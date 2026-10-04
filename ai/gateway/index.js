@@ -93,46 +93,10 @@ class AIGateway {
   }
 
   _executeDemo(task, prompt, options, lastError = null) {
-    let text = `[DEMO MODE] I am the AI60 Assistant. This is a simulated response for task: ${task}.`;
+    // No real AI provider is available. Return placeholders that callers must treat as
+    // "not available" (provider === 'DEMO'); no fabricated scores or ideas are produced.
+    let text = 'AI is not configured right now.';
     let data = null;
-
-    if (task === 'project_ideas') {
-      data = {
-        title: "Demo Project Idea",
-        problem: "Simulated problem for demo purposes.",
-        why_it_matters: "This is a demo response.",
-        mvp: "A basic MVP built in 60 minutes.",
-        tech_stack: ["HTML", "CSS", "JS"],
-        ai_component: "Demo AI integration.",
-        build_steps: ["Step 1", "Step 2", "Step 3"],
-        expected_output: "A working prototype.",
-        extensions: ["Extend it with XYZ."]
-      };
-    } else if (task === 'project_evaluation') {
-      data = {
-        problem_clarity: 80,
-        ai_integration: 85,
-        functionality: 90,
-        ux_polish: 75,
-        originality: 80,
-        technical_quality: 85,
-        completeness: 100,
-        overall_score: 85,
-        feedback: "This is a simulated evaluation.",
-        strengths: ["Demo strength"],
-        weaknesses: ["Demo weakness"],
-        next_steps: ["Keep building!"]
-      };
-    } else if (task === 'growth_analysis') {
-      data = {
-        observation: "Simulated observation.",
-        evidence: "Simulated evidence.",
-        recommendation: "Simulated recommendation.",
-        priority: "High",
-        expected_impact: "Positive",
-        experiment: "Try this demo experiment."
-      };
-    }
 
     const response = {
       text,

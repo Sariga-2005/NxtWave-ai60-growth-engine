@@ -6,7 +6,7 @@ class GeminiProvider extends LLMProvider {
     super({
       name: 'Gemini',
       apiKey: config.apiKey || process.env.GEMINI_API_KEY,
-      primaryModel: config.primaryModel || process.env.GEMINI_PRIMARY_MODEL || 'gemini-1.5-pro'
+      primaryModel: config.primaryModel || process.env.GEMINI_PRIMARY_MODEL || 'gemini-2.5-flash'
     });
     this.baseURL = `https://generativelanguage.googleapis.com/v1beta/models`;
   }

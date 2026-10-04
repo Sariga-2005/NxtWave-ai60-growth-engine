@@ -1,8 +1,9 @@
 // ============================================================================
 // AI60 Growth Engine — Seed Data
-// Generates realistic demo data for 426 registrations
+// Generates small demo data set for development testing
 // IMPORTANT: All data is simulated. Clearly labeled as DEMO DATA.
 // ============================================================================
+require('dotenv').config();
 const { getDb, saveDb, run, get, all } = require('./database');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -50,17 +51,21 @@ async function seed() {
 
   // Create admin
   const adminExists = get('SELECT id FROM users WHERE role = ?', ['admin']);
-  if (!adminExists) {
-    const adminHash = await bcrypt.hash('admin123', 10);
+  if (!adminExists && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+    const adminHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
     run(`INSERT INTO users (id, email, phone, password_hash, full_name, role, referral_code, display_name, created_at) 
          VALUES (?, ?, ?, ?, ?, 'admin', ?, ?, datetime('now'))`,
-      [generateId(), 'admin@ai60.demo', '0000000000', adminHash, 'Admin User', 'ADMIN00', 'Admin']);
+      [generateId(), process.env.ADMIN_EMAIL, '0000000000', adminHash, 'Admin User', 'ADMIN00', 'Admin']);
+    console.log(`👤 Admin created with email: ${process.env.ADMIN_EMAIL}\n`);
+  } else if (adminExists) {
+    console.log('👤 Admin user already exists\n');
+  } else {
+    console.log('⚠️ No ADMIN_EMAIL or ADMIN_PASSWORD provided in .env, skipping admin creation\n');
   }
 
-  console.log('👤 Admin: admin@ai60.demo / admin123\n');
-
   // Generate 426 students over 7 days
-  const TARGET = 426;
+  const SEED_COUNT = 50;
+  const TARGET = SEED_COUNT;
   const usedEmails = new Set();
   const usedPhones = new Set();
   const usedCodes = new Set();
@@ -68,7 +73,7 @@ async function seed() {
   const userData = [];
 
   // Daily distribution (realistic growth curve)
-  const dailyDist = [42, 55, 68, 72, 65, 70, 54]; // Total = 426
+  const dailyDist = [5, 7, 8, 9, 7, 8, 6]; // Total = 50
   const baseDate = new Date();
   baseDate.setDate(baseDate.getDate() - 7);
 
@@ -207,52 +212,21 @@ async function seed() {
       [generateId(), campaignId, ch.name, ch.reach, ch.conv, ch.expected, ch.actual, ch.budgetAlloc, ch.budgetSpent]);
   }
 
-  // Create experiments
-  console.log('🧪 Creating experiment data...');
-  const experiments = [
-    { name: 'Hero Headline Test', desc: 'Testing headline variations', element: 'hero_headline', a: 'Build Your First AI Project in 60 Minutes', b: 'Go From Zero to AI in One Hour', aImp: 1250, aClk: 180, aReg: 42, bImp: 1180, bClk: 155, bReg: 35, status: 'completed', winner: 'A' },
-    { name: 'CTA Button Copy', desc: 'Testing call-to-action text', element: 'cta_button', a: 'Reserve My Free Spot', b: 'Register Now — It\'s Free', aImp: 800, aClk: 120, aReg: 28, bImp: 820, bClk: 105, bReg: 22, status: 'completed', winner: 'A' },
-    { name: 'Referral CTA Placement', desc: 'Testing referral section placement', element: 'referral_section', a: 'Above fold', b: 'After registration', aImp: 500, aClk: 75, aReg: 15, bImp: 480, bClk: 88, bReg: 19, status: 'running', winner: null }
-  ];
-
-  for (const exp of experiments) {
-    run(`INSERT INTO experiments (id, name, description, test_element, variant_a, variant_b, variant_a_impressions, variant_a_clicks, variant_a_registrations, variant_b_impressions, variant_b_clicks, variant_b_registrations, status, winner, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-5 days'))`,
-      [generateId(), exp.name, exp.desc, exp.element, exp.a, exp.b, exp.aImp, exp.aClk, exp.aReg, exp.bImp, exp.bClk, exp.bReg, exp.status, exp.winner]);
-  }
-
+    
   // Create analytics events
   console.log('📊 Creating analytics events...');
   const eventTypes = ['page_view', 'quiz_started', 'quiz_completed', 'registration_started', 'registration_completed', 'referral_link_copied', 'whatsapp_share_clicked'];
-  const eventCounts = [2800, 520, 480, 460, 426, 380, 310];
+  
 
   for (let i = 0; i < eventTypes.length; i++) {
-    for (let j = 0; j < Math.min(eventCounts[i], 100); j++) { // Cap at 100 per type to keep seed fast
+    for (let j = 0; j < Math.min(SEED_COUNT, 20); j++) {
       run(`INSERT INTO analytics_events (id, event_name, user_id, source, created_at) 
            VALUES (?, ?, ?, ?, datetime('now', '-' || ? || ' hours'))`,
         [generateId(), eventTypes[i], j < userIds.length ? userIds[j] : null, randomFrom(SOURCES), randomInt(0, 168)]);
     }
   }
 
-  // Create daily targets
-  console.log('📈 Creating daily target data...');
-  const dailyTargets = [
-    { day: 1, target: 50, actual: 42 },
-    { day: 2, target: 65, actual: 55 },
-    { day: 3, target: 72, actual: 68 },
-    { day: 4, target: 75, actual: 72 },
-    { day: 5, target: 80, actual: 65 },
-    { day: 6, target: 85, actual: 70 },
-    { day: 7, target: 73, actual: 54 }
-  ];
-
-  for (const dt of dailyTargets) {
-    const date = new Date(baseDate);
-    date.setDate(date.getDate() + dt.day - 1);
-    run(`INSERT INTO daily_targets (id, day_number, date, target, actual, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
-      [generateId(), dt.day, date.toISOString().split('T')[0], dt.target, dt.actual]);
-  }
-
+    
   // Create demo projects
   console.log('🛠️ Creating demo project submissions...');
   const projectExamples = [
@@ -282,10 +256,10 @@ async function seed() {
   // Create messages
   console.log('💬 Creating demo messages...');
   const messageTemplates = [
-    { title: 'Registration Confirmation', body: "You're in! 🎉 Your AI60 workshop registration is confirmed. Keep your laptop ready and stay tuned for the workshop link.", channel: 'whatsapp', status: 'sent', count: 426 },
-    { title: 'Referral Invitation', body: 'Know 3 friends who want to build with AI? Share your personal invite link and unlock bonus resources! 🚀', channel: 'whatsapp', status: 'sent', count: 380 },
-    { title: '24-Hour Reminder', body: 'Your AI60 workshop starts tomorrow! 📅 Make sure your laptop is charged and you have a stable internet connection.', channel: 'whatsapp', status: 'scheduled', count: 0 },
-    { title: '1-Hour Reminder', body: 'Starting in 1 hour! 🔥 Click the workshop link to join. Let\'s build your first AI project together.', channel: 'whatsapp', status: 'draft', count: 0 }
+    { title: 'Registration Confirmation', body: "You're in! Your AI60 workshop registration is confirmed. Keep your laptop ready and stay tuned for the workshop link.", channel: 'whatsapp', status: 'draft', count: 0 },
+    { title: 'Referral Invitation', body: 'Know 3 friends who want to build with AI? Share your personal invite link and unlock bonus resources!', channel: 'whatsapp', status: 'draft', count: 0 },
+    { title: '24-Hour Reminder', body: 'Your AI60 workshop starts tomorrow! Make sure your laptop is charged and you have a stable internet connection.', channel: 'whatsapp', status: 'scheduled', count: 0 },
+    { title: '1-Hour Reminder', body: 'Starting in 1 hour! Click the workshop link to join. Let\'s build your first AI project together.', channel: 'whatsapp', status: 'draft', count: 0 }
   ];
 
   for (const msg of messageTemplates) {
