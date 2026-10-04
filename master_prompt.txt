@@ -1,0 +1,2633 @@
+<USER_REQUEST>
+# MASTER BUILD SPECIFICATION
+
+## NxtWave Growth Intern Challenge — AI60 Growth Engine
+
+You are the lead product engineer, UX designer, growth engineer, AI engineer, backend engineer, QA engineer, DevOps engineer, and technical project manager for this project.
+
+Your job is to BUILD THE ENTIRE WORKING PRODUCT described below.
+
+Do not merely generate a mockup.
+
+Do not stop after creating the landing page.
+
+Do not leave major functionality as TODOs.
+
+Build, connect, test, seed, and deploy as much of the system as the environment permits.
+
+The final result must look and behave like a polished professional SaaS/growth product that could realistically be shown to a Growth/Product/Engineering team.
+
+---
+
+# 1. SOURCE OF TRUTH
+
+The attached challenge PDF is the primary source of truth.
+
+Challenge:
+
+"NxtWave Growth Intern – Growth Challenge"
+
+Core challenge:
+
+NxtWave plans to launch a free online workshop:
+
+"Build Your First AI Project in 60 Minutes"
+
+Mission:
+
+Create a plan to get 500 final-year engineering students to register.
+
+Given:
+
+* Budget: ₹2,000
+* Campaign duration: 7 days
+* AI tools: unrestricted
+* Simulation environment
+* No requirement to actually contact students
+* Submission requires a Growth Plan
+* Submission requires a working asset
+* Submission requires AI + Learning Notes
+* Submission requires a 3-minute video
+
+The PDF asks us to understand the student, design the marketing campaign, build one working asset, and explain our thinking.
+
+Examples of working assets in the PDF include:
+
+* Landing page
+* WhatsApp flow
+* Referral code and tracker
+* Workshop engagement tools
+* Automation of AI project evaluation
+
+The PDF explicitly states that more complex and more effective builds can earn more brownie points.
+
+IMPORTANT:
+
+Do not claim that any feature is officially required by NxtWave unless the challenge document explicitly requires it.
+
+Features beyond the document should be implemented as strategic differentiators that strengthen the solution.
+
+---
+
+# 2. PRODUCT CONCEPT
+
+Build:
+
+# AI60 Growth Engine
+
+Tagline:
+
+"Turn one workshop registration into a student-powered growth loop."
+
+The system should support the complete lifecycle:
+
+DISCOVER
+→ LAND
+→ UNDERSTAND
+→ REGISTER
+→ CONFIRM
+→ REFER
+→ REMIND
+→ ATTEND
+→ BUILD
+→ SUBMIT
+→ EVALUATE
+→ SHARE
+→ GROW
+
+The product should combine:
+
+1. Student-facing landing page
+2. Student registration
+3. Student onboarding
+4. AI workshop assistant
+5. AI project idea generator
+6. WhatsApp-ready communication flow
+7. Personal referral links
+8. Referral tracking
+9. Referral leaderboard
+10. College/club ambassador tracking
+11. Campaign/channel attribution
+12. Admin growth dashboard
+13. Campaign simulator
+14. Analytics
+15. AI campaign insights
+16. A/B testing capability
+17. Workshop engagement area
+18. AI project submission
+19. AI project evaluation
+20. Post-workshop sharing/referral loop
+21. Admin configuration
+22. Professional authentication
+23. Database persistence
+24. Responsive UI
+25. Error handling
+26. Loading states
+27. Empty states
+28. Validation
+29. Demo/seed data
+30. Production-ready architecture
+
+Do NOT sacrifice core reliability merely to add more features.
+
+Priority:
+
+CORE FUNCTIONALITY FIRST
+→ DATA INTEGRITY
+→ UX POLISH
+→ ANALYTICS
+→ AI
+→ ADVANCED GROWTH FEATURES
+
+---
+
+# 3. IMPORTANT PRODUCT PRINCIPLE
+
+This is NOT primarily an AI showcase.
+
+The central problem is:
+
+# "How can we efficiently generate 500 registrations with only ₹2,000 over 7 days?"
+
+Every major feature must connect to that goal.
+
+Avoid useless AI.
+
+Every feature should answer at least one of:
+
+* Does it increase registration conversion?
+* Does it reduce drop-off?
+* Does it increase referrals?
+* Does it improve channel performance?
+* Does it improve campaign decision-making?
+* Does it increase workshop engagement?
+* Does it create a measurable growth loop?
+* Does it reduce manual campaign work?
+
+---
+
+# 4. TARGET USER
+
+Primary target:
+
+Final-year engineering students.
+
+Likely motivations:
+
+* Placements
+* Resume building
+* Building a practical AI project
+* Learning AI without a huge time commitment
+* Portfolio development
+* Curiosity about AI
+* Wanting something tangible to show recruiters
+* Fear of being left behind
+* Wanting beginner-friendly exposure
+
+The product should NOT assume every student is an AI expert.
+
+Design for:
+
+BEGINNER → INTERMEDIATE
+
+The messaging should be simple, benefit-oriented, and student-friendly.
+
+---
+
+# 5. BRAND / UI DIRECTION
+
+Create a highly professional modern EdTech/SaaS interface.
+
+Do NOT make it look like:
+
+* a college project
+* a generic Bootstrap template
+* a gaming site
+* a childish AI website
+* a template with excessive gradients
+* an over-animated portfolio
+
+Use a restrained professional visual system inspired by modern technology/EdTech companies.
+
+NxtWave's public technology material emphasizes technology, scale, AI, modern engineering, and professional product quality, so the interface should communicate those qualities.
+
+Use a sophisticated palette such as:
+
+Primary:
+Deep navy / near-black blue
+
+Secondary:
+Professional blue
+
+Accent:
+Electric blue/cyan OR restrained violet
+
+Background:
+Off-white/light neutral for student pages
+
+Dashboard:
+Very light gray / white surfaces
+
+Text:
+Dark charcoal
+
+Success:
+Professional green
+
+Warning:
+Amber
+
+Error:
+Professional red
+
+IMPORTANT:
+
+Do not randomly use multiple colors.
+
+Create design tokens:
+
+--primary
+--primary-hover
+--secondary
+--accent
+--background
+--surface
+--surface-muted
+--text-primary
+--text-secondary
+--border
+--success
+--warning
+--danger
+
+Use consistent typography.
+
+Recommended typography:
+
+Inter / Geist / equivalent modern sans-serif.
+
+Use:
+
+* strong visual hierarchy
+* 8px spacing system
+* consistent border radius
+* subtle shadows
+* clean cards
+* accessible contrast
+* responsive layouts
+* polished hover states
+* skeleton loaders
+* toast notifications
+
+Animations should be subtle and purposeful.
+
+---
+
+# 6. RESPONSIVE REQUIREMENT
+
+The entire application must work on:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile
+
+Test:
+
+360px
+390px
+768px
+1024px
+1440px+
+
+Mobile must NOT look like a shrunk desktop page.
+
+---
+
+# 7. APPLICATION STRUCTURE
+
+Create two major experiences.
+
+## STUDENT APP
+
+Routes:
+
+/
+
+/workshop
+
+/register
+
+/register/success
+
+/dashboard
+
+/referral
+
+/leaderboard
+
+/assistant
+
+/project-ideas
+
+/workshop-room
+
+/project-submit
+
+/project-result
+
+/profile
+
+/faq
+
+/privacy
+
+/terms
+
+## ADMIN APP
+
+Routes:
+
+/admin/login
+
+/admin
+
+/admin/registrations
+
+/admin/referrals
+
+/admin/colleges
+
+/admin/campaigns
+
+/admin/channels
+
+/admin/leaderboard
+
+/admin/projects
+
+/admin/evaluations
+
+/admin/experiments
+
+/admin/ai-insights
+
+/admin/simulator
+
+/admin/messages
+
+/admin/settings
+
+/admin/audit-log
+
+---
+
+# 8. LANDING PAGE
+
+Create an extremely polished conversion-focused landing page.
+
+Hero:
+
+BUILD YOUR FIRST AI PROJECT
+IN 60 MINUTES
+
+Subheading:
+
+"Go from idea to a working AI project in one focused, beginner-friendly session."
+
+Badges:
+
+FREE
+LIVE
+60 MINUTES
+BEGINNER FRIENDLY
+
+Primary CTA:
+
+"Reserve My Free Spot"
+
+Secondary CTA:
+
+"See What I'll Build"
+
+Hero visual:
+
+Show a clean visual progression:
+
+IDEA
+→ BUILD
+→ CONNECT
+→ TEST
+→ DEMO
+
+Do NOT use a generic stock image.
+
+Create a product-style visual or illustration.
+
+---
+
+# 9. LANDING PAGE SECTIONS
+
+Include:
+
+1. Hero
+2. Workshop countdown
+3. What you will build
+4. 60-minute timeline
+5. Who this is for
+6. Why students should care
+7. What you need
+8. FAQ
+9. Social proof placeholder
+10. Referral explanation
+11. Final CTA
+12. Footer
+
+Do not fabricate testimonials.
+
+If demo testimonials are needed, clearly mark them as sample/demo data.
+
+---
+
+# 10. 60-MINUTE TIMELINE
+
+Show:
+
+0–10 min
+Understand the problem
+
+10–20 min
+Plan the AI solution
+
+20–40 min
+Build
+
+40–50 min
+Connect/test
+
+50–60 min
+Demo and improve
+
+Use an elegant timeline component.
+
+---
+
+# 11. "IS THIS FOR ME?" QUIZ
+
+Create a short interactive qualification quiz.
+
+Questions:
+
+1. What's your current AI experience?
+2. What is your branch?
+3. What do you want from the workshop?
+4. Have you built a project before?
+5. How comfortable are you with coding?
+
+Output:
+
+"Workshop Fit Score"
+
+Example:
+
+92% MATCH
+
+"You're a great fit because this workshop is designed for students who want practical AI experience without spending months learning first."
+
+CTA:
+
+"Reserve My Spot"
+
+Store quiz results.
+
+Use them for segmentation.
+
+---
+
+# 12. REGISTRATION
+
+Fields:
+
+Required:
+
+* Full name
+* Email
+* WhatsApp number
+* College
+* Branch
+* Graduation year
+
+Optional:
+
+* AI experience
+* Coding experience
+* Project interest
+
+Validation:
+
+* valid email
+* valid Indian phone number
+* graduation year
+* duplicate registration prevention
+* required fields
+* clear errors
+
+On submit:
+
+1. Save registration
+2. Generate unique student ID
+3. Generate referral code
+4. Generate referral URL
+5. Track acquisition source
+6. Save UTM parameters
+7. Trigger confirmation workflow
+8. Show success page
+
+---
+
+# 13. REGISTRATION SUCCESS PAGE
+
+Show:
+
+🎉 You're Registered!
+
+Then:
+
+Your workshop details
+
+Your personal referral link
+
+Example:
+
+ai60.example/r/ABC123
+
+Buttons:
+
+* Copy referral link
+* Share on WhatsApp
+* Share
+* View dashboard
+
+Referral CTA:
+
+"Help 3 friends build their first AI project too."
+
+---
+
+# 14. REFERRAL ENGINE
+
+Every registered student gets:
+
+* referral code
+* referral URL
+* referral count
+* successful registrations
+* pending referrals
+* referral conversion rate
+
+Track:
+
+referrer_id
+referred_user_id
+timestamp
+source
+status
+
+Prevent:
+
+* self-referral
+* duplicate referral
+* fraudulent repeated registrations
+* same email abuse
+* same phone abuse
+
+Create referral attribution rules.
+
+First-touch and last-touch should be configurable.
+
+---
+
+# 15. REFERRAL DASHBOARD
+
+Student sees:
+
+Your Growth Impact
+
+Friends invited: 8
+
+Successful registrations: 5
+
+Referral conversion: 62.5%
+
+Progress bar.
+
+Example milestone:
+
+1 friend → Workshop reminder bonus
+
+3 friends → Project resources
+
+5 friends → Exclusive bonus resource
+
+10 friends → Recognition / premium bonus
+
+IMPORTANT:
+
+Treat these as proposed campaign incentives, not official promises.
+
+Admin should be able to configure milestones.
+
+---
+
+# 16. REFERRAL LEADERBOARD
+
+Create:
+
+Global leaderboard
+
+College leaderboard
+
+Weekly leaderboard
+
+Display:
+
+Rank
+Name
+College
+Successful referrals
+
+Privacy:
+
+Do not expose phone/email.
+
+Allow display-name controls.
+
+Example:
+
+🥇 Student A
+🥈 Student B
+🥉 Student C
+
+Admin can disable leaderboard.
+
+---
+
+# 17. COLLEGE / CLUB AMBASSADOR SYSTEM
+
+Admin can create campaign partners.
+
+Fields:
+
+* College
+* Club
+* Ambassador name
+* ambassador code
+* contact
+* campaign start
+* campaign end
+
+Each ambassador gets:
+
+unique URL
+
+Example:
+
+/register?ambassador=AMRITA01
+
+Dashboard tracks:
+
+* visits
+* registrations
+* conversion rate
+* referrals
+* ranking
+
+---
+
+# 18. CHANNEL ATTRIBUTION
+
+Track:
+
+* direct
+* WhatsApp
+* email
+* college club
+* referral
+* Instagram
+* LinkedIn
+* other
+
+Support UTM:
+
+utm_source
+utm_medium
+utm_campaign
+utm_content
+utm_term
+
+Every registration should retain acquisition information.
+
+---
+
+# 19. CAMPAIGN DASHBOARD
+
+Admin dashboard should show:
+
+TARGET
+
+500
+
+CURRENT
+
+426
+
+REMAINING
+
+74
+
+PROGRESS
+
+85.2%
+
+Also:
+
+Registrations today
+Registrations yesterday
+7-day registrations
+Conversion rate
+Referral registrations
+Organic registrations
+Top channel
+Top college
+Top ambassador
+
+Use charts:
+
+* registrations over time
+* channel distribution
+* conversion by source
+* college performance
+* referral contribution
+* daily target vs actual
+
+---
+
+# 20. 500-REGISTRATION GROWTH MODEL
+
+Create a campaign planning module.
+
+Example categories:
+
+College clubs
+WhatsApp communities
+Student referrals
+Email
+Organic/social
+Paid experiments
+
+Admin can set:
+
+Reach
+Expected conversion
+Expected registrations
+
+Formula:
+
+Expected registrations =
+Reach × conversion rate
+
+Show:
+
+Projected registrations
+
+Gap to 500
+
+Required additional registrations
+
+---
+
+# 21. CAMPAIGN SIMULATOR
+
+Create an interactive simulator.
+
+Inputs:
+
+Number of clubs
+Average club reach
+Club conversion
+
+WhatsApp groups
+Average reach
+Conversion
+
+Referral participants
+Average successful referrals
+
+Email reach
+Email conversion
+
+Paid budget
+CPC/CPM assumption
+Conversion
+
+Output:
+
+Projected reach
+Projected registrations
+Cost per registration
+Referral contribution
+Probability of hitting 500
+
+Clearly label assumptions.
+
+Do not present assumptions as actual campaign results.
+
+---
+
+# 22. AI WORKSHOP ASSISTANT
+
+Create an LLM-powered assistant.
+
+Name:
+
+AI60 Assistant
+
+Purpose:
+
+Answer workshop-related questions.
+
+Examples:
+
+"Do I need Python?"
+
+"Is this suitable for beginners?"
+
+"What will I build?"
+
+"Is this useful for placements?"
+
+"How long is the workshop?"
+
+"What should I bring?"
+
+"What happens after registration?"
+
+The AI MUST only answer from approved workshop knowledge.
+
+Create a knowledge base / configuration object containing:
+
+* workshop description
+* schedule
+* target audience
+* FAQs
+* requirements
+* rules
+* project examples
+* referral information
+
+If uncertain:
+
+"I don't have enough information to answer that accurately."
+
+Never hallucinate.
+
+---
+
+# 23. AI PROJECT IDEA GENERATOR
+
+Student enters:
+
+Branch
+Interest
+Skill level
+Preferred domain
+
+AI generates:
+
+Project title
+Problem
+What the AI does
+Difficulty
+Skills learned
+Suggested stack
+60-minute MVP
+Possible extension
+
+Example:
+
+"AI Resume Feedback Assistant"
+
+Show:
+
+MVP
+→ 60-minute version
+
+Advanced version
+→ future project
+
+CTA:
+
+"Save this idea"
+
+Saved ideas appear in student dashboard.
+
+---
+
+# 24. AI LEAD / INTENT SEGMENTATION
+
+Based on quiz + registration behavior, calculate:
+
+Low intent
+Medium intent
+High intent
+
+Signals:
+
+* completed quiz
+* registered
+* referral activity
+* project idea generated
+* workshop page visits
+* reminder engagement
+
+Do NOT make sensitive inferences.
+
+Only use workshop/campaign behavior.
+
+Admin can filter users by intent.
+
+---
+
+# 25. WHATSAPP FLOW
+
+Build a WhatsApp-ready communication architecture.
+
+Core events:
+
+REGISTRATION_CONFIRMED
+
+REFERRAL_CREATED
+
+REMINDER_24H
+
+REMINDER_1H
+
+WORKSHOP_STARTED
+
+PROJECT_SUBMITTED
+
+PROJECT_EVALUATED
+
+WORKSHOP_COMPLETED
+
+For the prototype:
+
+provide a functional simulated messaging console if live WhatsApp credentials are unavailable.
+
+Do NOT fake a real WhatsApp API connection.
+
+If production credentials are configured, use the official WhatsApp Business/Cloud API.
+
+Create message templates.
+
+Example:
+
+Registration:
+
+"You're in! 🎉 Your AI60 workshop registration is confirmed."
+
+Referral:
+
+"Know 3 friends who want to build with AI? Share your personal invite."
+
+Reminder:
+
+"Your workshop starts tomorrow. Keep your laptop ready."
+
+---
+
+# 26. MESSAGE CENTER
+
+Admin can:
+
+* create message
+* choose audience
+* choose channel
+* preview
+* schedule
+* send test
+* see status
+
+Audience filters:
+
+* all registered
+* not referred
+* high intent
+* specific college
+* ambassador group
+* inactive registrants
+
+---
+
+# 27. EMAIL SUPPORT
+
+Create email templates:
+
+Registration confirmation
+Referral invitation
+24-hour reminder
+1-hour reminder
+Workshop follow-up
+Project evaluation result
+
+If no email provider credentials exist:
+
+Implement a provider abstraction and local/demo mode.
+
+Do not pretend emails were actually sent.
+
+---
+
+# 28. WORKSHOP ROOM
+
+After registration, student gets access to a workshop room.
+
+Show:
+
+Countdown
+
+Workshop status:
+
+NOT STARTED
+LIVE
+COMPLETED
+
+Sections:
+
+1. Welcome
+2. Challenge
+3. Build
+4. Resources
+5. Submit project
+
+Include progress:
+
+0%
+25%
+50%
+75%
+100%
+
+---
+
+# 29. WORKSHOP ENGAGEMENT
+
+Include:
+
+Quick polls
+Mini quizzes
+Checklist
+Progress tracker
+Project checklist
+
+Example:
+
+☐ Choose idea
+☐ Create project
+☐ Add AI
+☐ Test
+☐ Submit
+
+Store completion state.
+
+---
+
+# 30. PROJECT SUBMISSION
+
+Student submits:
+
+Project name
+Description
+GitHub URL
+Demo URL
+Screenshot
+Tech stack
+What AI does
+What they learned
+
+Validate URLs.
+
+Show submission status:
+
+Draft
+Submitted
+Under review
+Evaluated
+
+---
+
+# 31. AI PROJECT EVALUATION
+
+Create an AI evaluation pipeline.
+
+Evaluate:
+
+Problem clarity
+AI usage
+Functionality
+UX
+Originality
+Technical implementation
+Completeness
+
+Return:
+
+Score / 100
+
+Strengths
+
+Weaknesses
+
+Suggestions
+
+Next steps
+
+IMPORTANT:
+
+Clearly label this as an AI-assisted evaluation.
+
+Do not claim human judging unless human review is actually implemented.
+
+---
+
+# 32. AI EVALUATION ADMIN
+
+Admin sees:
+
+Submission
+AI score
+Rubric scores
+AI reasoning summary
+Flags
+Manual review status
+
+Admin can:
+
+Approve
+Reject
+Request changes
+Override score
+
+Keep audit history.
+
+---
+
+# 33. POST-WORKSHOP GROWTH LOOP
+
+After submission:
+
+Show:
+
+🎉 You built your first AI project.
+
+Then:
+
+Share project
+
+Options:
+
+WhatsApp
+LinkedIn
+Copy link
+
+Generate a share card.
+
+Message:
+
+"I just built my first AI project in 60 minutes."
+
+Include workshop link.
+
+This creates another acquisition loop.
+
+---
+
+# 34. AI CAMPAIGN INSIGHTS
+
+Admin can click:
+
+"Generate AI Growth Insights"
+
+AI analyzes campaign metrics and returns:
+
+Top-performing channel
+Weakest channel
+Referral contribution
+Conversion bottleneck
+College opportunity
+Recommended experiment
+
+Example:
+
+"Referral traffic is converting better than general campaign traffic. Consider increasing referral activation."
+
+Every insight must cite the metrics/data used.
+
+Never fabricate data.
+
+---
+
+# 35. A/B TESTING
+
+Create experimentation infrastructure.
+
+Test:
+
+Hero headline
+CTA text
+Referral CTA
+Landing-page layout
+Workshop value proposition
+
+Store:
+
+experiment
+variant
+impressions
+clicks
+registrations
+conversion rate
+
+Show winner.
+
+Do not declare a winner with insufficient sample size.
+
+Clearly label demo/simulated data.
+
+---
+
+# 36. ADMIN CAMPAIGN BUILDER
+
+Admin can create:
+
+Campaign name
+Start date
+End date
+Target registrations
+Budget
+Channels
+
+Budget tracker:
+
+₹2,000 total
+
+Show:
+
+Spent
+Remaining
+Cost per registration
+
+Allow channel-level budget allocation.
+
+---
+
+# 37. ADMIN USER MANAGEMENT
+
+Admin can:
+
+Search
+Filter
+Sort
+View
+Export
+
+Filters:
+
+College
+Branch
+Graduation year
+Source
+Intent
+Referral count
+Registration date
+Workshop attendance
+Submission status
+
+---
+
+# 38. EXPORTS
+
+Support CSV export for:
+
+Registrations
+Referrals
+Campaign performance
+College performance
+Project submissions
+
+Do not expose unnecessary personal information.
+
+---
+
+# 39. AUTHENTICATION
+
+Implement:
+
+Student authentication
+
+Admin authentication
+
+Use secure sessions/authentication.
+
+Passwords must never be stored in plaintext.
+
+Protect admin routes.
+
+Use role-based access.
+
+Roles:
+
+STUDENT
+AMBASSADOR
+ADMIN
+
+---
+
+# 40. DATABASE
+
+Use a proper relational schema.
+
+Recommended entities:
+
+users
+student_profiles
+registrations
+referrals
+referral_events
+campaigns
+campaign_channels
+utm_events
+colleges
+clubs
+ambassadors
+messages
+message_events
+quiz_attempts
+project_ideas
+saved_ideas
+workshop_sessions
+workshop_progress
+projects
+evaluations
+experiments
+experiment_events
+analytics_events
+ai_insights
+admin_users
+audit_logs
+settings
+
+Use foreign keys.
+
+Add indexes for:
+
+email
+phone
+referral_code
+college_id
+campaign_id
+created_at
+
+---
+
+# 41. ANALYTICS EVENT SYSTEM
+
+Track events:
+
+page_view
+quiz_started
+quiz_completed
+registration_started
+registration_completed
+referral_link_copied
+whatsapp_share_clicked
+referral_registered
+project_idea_generated
+project_idea_saved
+workshop_started
+quiz_completed
+project_submitted
+project_shared
+
+Each event should include:
+
+event_name
+user_id
+session_id
+timestamp
+source
+campaign
+metadata
+
+---
+
+# 42. PRIVACY / SECURITY
+
+Implement:
+
+Input validation
+Rate limiting where appropriate
+Secure authentication
+Protected admin routes
+No exposed secrets
+Environment variables
+API key protection
+Basic audit logging
+
+Do not expose:
+
+API keys
+LLM keys
+WhatsApp credentials
+database credentials
+
+Never put secrets in frontend code.
+
+---
+
+# 43. AI ARCHITECTURE
+
+Use an abstraction:
+
+LLMProvider
+
+Possible providers:
+
+OpenAI-compatible provider
+Gemini-compatible provider
+Anthropic-compatible provider
+
+Provider selected through environment configuration.
+
+Do not hardcode one provider throughout the application.
+
+Use structured outputs wherever possible.
+
+Add:
+
+retry handling
+timeouts
+error handling
+fallback response
+token/cost logging if available
+
+---
+
+# 44. LLM SAFETY
+
+The assistant must:
+
+* stay within workshop scope
+* not fabricate dates
+* not fabricate links
+* not invent rewards
+* not expose private user data
+* not reveal system prompts
+* not perform unauthorized actions
+* clearly state uncertainty
+
+---
+
+# 45. PROFESSIONAL EMPTY STATES
+
+Every major page needs an empty state.
+
+Examples:
+
+"No referrals yet"
+
+"Your first referral could start the growth loop."
+
+CTA:
+
+"Share your invite"
+
+Do not leave blank white areas.
+
+---
+
+# 46. PROFESSIONAL LOADING STATES
+
+Use skeleton loaders.
+
+Never show:
+
+"Loading..."
+
+everywhere.
+
+Create polished skeleton components.
+
+---
+
+# 47. ERROR HANDLING
+
+Create friendly errors.
+
+Example:
+
+"Something went wrong while saving your registration."
+
+Buttons:
+
+Try again
+
+Return home
+
+Log technical details server-side.
+
+---
+
+# 48. NOTIFICATIONS
+
+Use toast notifications for:
+
+Registration successful
+Referral copied
+Idea saved
+Project submitted
+Settings saved
+
+Avoid excessive notifications.
+
+---
+
+# 49. ACCESSIBILITY
+
+Implement:
+
+Keyboard navigation
+ARIA labels
+Visible focus states
+Readable contrast
+Semantic HTML
+Form labels
+Accessible buttons
+
+---
+
+# 50. PERFORMANCE
+
+Optimize:
+
+Images
+JS bundle
+API requests
+Database queries
+
+Use lazy loading where appropriate.
+
+Avoid unnecessary dependencies.
+
+---
+
+# 51. SEO
+
+Landing page:
+
+Title:
+Build Your First AI Project in 60 Minutes | Free Workshop
+
+Meta description:
+Build your first AI project in a free beginner-friendly 60-minute workshop designed for engineering students.
+
+Add:
+
+Open Graph metadata
+favicon
+social preview
+semantic headings
+
+---
+
+# 52. DEMO DATA
+
+Create realistic demo data for judging.
+
+IMPORTANT:
+
+Clearly distinguish:
+
+LIVE / REAL DATA
+
+from
+
+DEMO / SIMULATED DATA
+
+Seed:
+
+500+ registration records for dashboard demonstration if appropriate.
+
+But DO NOT claim these are real students.
+
+Label:
+
+"Demo dataset"
+
+Use realistic distributions.
+
+Example:
+
+426 registrations
+500 target
+
+Do not randomly make every number perfect.
+
+Create realistic campaign variation.
+
+---
+
+# 53. DEMO MODE
+
+Create a controlled demo mode.
+
+Admin can reset demo data.
+
+Student can enter demo journey.
+
+Provide a hidden or documented demo account only if appropriate.
+
+Do not hardcode insecure production credentials.
+
+---
+
+# 54. ADMIN DASHBOARD VISUAL DESIGN
+
+Dashboard should look like a serious growth analytics product.
+
+Top:
+
+Campaign status
+
+500 target
+
+426 registrations
+
+85.2%
+
+Then:
+
+Metric cards
+
+Then:
+
+Registration trend chart
+
+Then:
+
+Channel performance
+
+Then:
+
+Referral contribution
+
+Then:
+
+College performance
+
+Then:
+
+AI growth insight
+
+Then:
+
+Recent registrations
+
+---
+
+# 55. DASHBOARD COLOR LOGIC
+
+Use:
+
+Green:
+positive / on track
+
+Amber:
+needs attention
+
+Red:
+underperforming
+
+Blue:
+neutral information
+
+Never use colors as the only indicator.
+
+---
+
+# 56. GROWTH FUNNEL
+
+Display:
+
+Visitors
+↓
+Quiz started
+↓
+Quiz completed
+↓
+Registration started
+↓
+Registration completed
+↓
+Referral activated
+↓
+Referral conversion
+↓
+Workshop attendance
+↓
+Project submission
+
+Show conversion percentages between stages.
+
+This is one of the most important analytics components.
+
+---
+
+# 57. 500-REGISTRATION TARGET MONITOR
+
+Create:
+
+Daily target
+
+Actual registrations
+
+Variance
+
+Projected final registrations
+
+Example:
+
+Day 1
+72 / 71
+
+Day 2
+140 / 142
+
+...
+
+Use realistic demo data.
+
+Show:
+
+ON TRACK
+AT RISK
+TARGET ACHIEVED
+
+---
+
+# 58. GROWTH ALERTS
+
+Create rule-based alerts.
+
+Examples:
+
+"Registration pace is 18% below target."
+
+"Referral conversion increased today."
+
+"College X is outperforming the campaign average."
+
+"WhatsApp traffic has high reach but low conversion."
+
+These can later be generated by AI.
+
+---
+
+# 59. CAMPAIGN RECOMMENDATION ENGINE
+
+Rule examples:
+
+If referral conversion > average:
+Recommend increasing referral exposure.
+
+If channel conversion low:
+Recommend CTA experiment.
+
+If traffic high but registration low:
+Recommend landing-page test.
+
+If college has high conversion:
+Recommend additional ambassador activation.
+
+Show:
+
+Observation
+Evidence
+Recommendation
+
+---
+
+# 60. BUDGET MODULE
+
+Budget:
+
+₹2,000
+
+Display:
+
+Total
+Spent
+Remaining
+Cost per registration
+
+Channel allocation.
+
+Example demo:
+
+WhatsApp/Community activation
+₹X
+
+College outreach
+₹X
+
+Creative/experiments
+₹X
+
+Reserve
+₹X
+
+IMPORTANT:
+
+These are proposed assumptions, not actual expenses.
+
+---
+
+# 61. GROWTH STRATEGY PAGE
+
+Inside admin, create a page explaining:
+
+TARGET
+
+500 final-year engineering students
+
+TIME
+
+7 days
+
+BUDGET
+
+₹2,000
+
+PRIMARY ENGINE
+
+Student communities + college clubs + referral loop
+
+SECONDARY ENGINE
+
+Email + organic/social + controlled paid experiment
+
+This page can support the submission/demo.
+
+---
+
+# 62. "WHY THIS CAN REACH 500" MODULE
+
+Show the mathematical model.
+
+Example:
+
+Source
+Expected registrations
+
+College clubs
+X
+
+WhatsApp communities
+X
+
+Referrals
+X
+
+Email
+X
+
+Organic
+X
+
+Total
+500+
+
+All numbers should be editable assumptions.
+
+---
+
+# 63. AI + HUMAN JUDGMENT
+
+Create a page documenting:
+
+AI recommendation
+Human decision
+Reason
+
+Use it to demonstrate that AI was used as a tool, not blindly followed.
+
+Example:
+
+AI suggested:
+"Use 20+ acquisition channels."
+
+Rejected.
+
+Reason:
+The challenge explicitly says to prioritize rather than give 20 ideas.
+
+This is a strong demonstration of judgment.
+
+---
+
+# 64. BUILD DOCUMENTATION
+
+Create:
+
+README.md
+
+Include:
+
+* Product overview
+* Architecture
+* Features
+* Setup
+* Environment variables
+* Database setup
+* LLM setup
+* WhatsApp setup
+* Email setup
+* Seed data
+* Demo instructions
+* Deployment
+* Known limitations
+* Production roadmap
+
+---
+
+# 65. ENVIRONMENT VARIABLES
+
+Create .env.example.
+
+Include placeholders for:
+
+DATABASE_URL
+AUTH_SECRET
+LLM_API_KEY
+LLM_PROVIDER
+WHATSAPP_TOKEN
+WHATSAPP_PHONE_NUMBER_ID
+EMAIL_API_KEY
+NEXT_PUBLIC_APP_URL
+
+Never commit real secrets.
+
+---
+
+# 66. API DESIGN
+
+Create clean API/service boundaries.
+
+Examples:
+
+POST /api/register
+GET /api/student/dashboard
+POST /api/referral
+GET /api/referral/stats
+POST /api/ai/chat
+POST /api/ai/project-idea
+POST /api/project
+POST /api/project/evaluate
+GET /api/admin/analytics
+GET /api/admin/registrations
+POST /api/admin/campaign
+POST /api/admin/experiment
+POST /api/admin/insights
+
+Use proper authentication/authorization.
+
+---
+
+# 67. TESTING
+
+Create tests for:
+
+Registration
+Duplicate registration
+Referral attribution
+Self-referral prevention
+Campaign tracking
+Dashboard calculations
+AI failure fallback
+Admin authorization
+Project submission
+Evaluation
+
+Also perform:
+
+mobile test
+desktop test
+basic accessibility test
+basic performance test
+
+---
+
+# 68. CALCULATION ACCURACY
+
+Important metrics must be calculated from database data.
+
+Do NOT hardcode:
+
+registration count
+conversion rate
+referral rate
+channel performance
+
+The dashboard must derive them from stored events/data.
+
+---
+
+# 69. NO FAKE FUNCTIONALITY
+
+Never create buttons that do nothing.
+
+If a feature cannot be connected because credentials are unavailable:
+
+1. Create the correct abstraction
+2. Implement demo mode
+3. Clearly label demo mode
+4. Document production setup
+
+Do not fake successful API calls.
+
+---
+
+# 70. PROFESSIONAL MICROCOPY
+
+Avoid:
+
+"Click here"
+
+"Submit"
+
+"AI MAGIC"
+
+Use:
+
+"Reserve my free spot"
+
+"Generate my project idea"
+
+"View referral impact"
+
+"Analyze campaign"
+
+"Generate growth insight"
+
+"Submit my project"
+
+---
+
+# 71. NAVIGATION
+
+Student navbar:
+
+Logo
+Workshop
+My Dashboard
+My Referrals
+AI Assistant
+
+Admin sidebar:
+
+Overview
+Registrations
+Campaigns
+Channels
+Referrals
+Colleges
+Experiments
+Projects
+AI Insights
+Simulator
+Messages
+Settings
+
+---
+
+# 72. MOBILE NAVIGATION
+
+Use:
+
+bottom navigation OR compact mobile menu.
+
+Do not make a desktop sidebar overflow on mobile.
+
+---
+
+# 73. DESIGN SYSTEM COMPONENTS
+
+Create reusable components:
+
+Button
+Input
+Select
+Modal
+Drawer
+Toast
+Card
+MetricCard
+ChartCard
+Badge
+ProgressBar
+DataTable
+Tabs
+Dropdown
+Tooltip
+Skeleton
+EmptyState
+ErrorState
+Timeline
+Leaderboard
+ReferralCard
+AIChat
+CampaignCard
+FunnelChart
+GrowthInsightCard
+
+---
+
+# 74. FINAL UX QUALITY BAR
+
+Before considering the build complete, inspect every screen for:
+
+alignment
+spacing
+typography
+mobile responsiveness
+empty states
+loading states
+error states
+hover states
+button consistency
+form validation
+accessibility
+visual hierarchy
+
+The final product must feel intentional.
+
+---
+
+# 75. DO NOT OVERDESIGN
+
+Avoid:
+
+Huge gradients
+Excessive glassmorphism
+Excessive animations
+Neon cyberpunk aesthetics
+Too many cards
+Too many colors
+Huge text everywhere
+Generic AI robot illustrations
+
+Professional > flashy.
+
+---
+
+# 76. FINAL DEMO FLOW
+
+Prepare a complete 3-minute demo journey.
+
+Start:
+
+Landing page
+
+Then:
+
+Student quiz
+
+Registration
+
+Success page
+
+Referral link
+
+WhatsApp share
+
+Student dashboard
+
+AI project idea
+
+Admin dashboard
+
+500 target
+
+Channel analytics
+
+Referral analytics
+
+AI growth insight
+
+Campaign simulator
+
+Project submission
+
+AI evaluation
+
+Return to growth loop
+
+The demo should feel like ONE connected product.
+
+---
+
+# 77. JUDGING STORY
+
+The product story should be:
+
+"The problem isn't just getting students to register once. The challenge is acquiring 500 students with only ₹2,000 in 7 days."
+
+"Our solution turns every registration into a potential acquisition node."
+
+"Students register → receive a personal referral → bring peers → peers become new acquisition nodes."
+
+"Meanwhile, the admin dashboard measures which channels, colleges, and referrals actually drive growth."
+
+"AI assists students and campaign operators, but the system keeps human decision-making and measurable growth at the center."
+
+---
+
+# 78. SUBMISSION SUPPORT
+
+Create a /submission folder containing drafts for:
+
+growth-plan.md
+ai-learning-notes.md
+video-script.md
+
+Do NOT fabricate claims.
+
+---
+
+# 79. GROWTH PLAN — 5 SLIDES
+
+Prepare content for:
+
+SLIDE 1
+Student + Problem
+
+SLIDE 2
+Priority Growth Strategy
+
+SLIDE 3
+500 Registration Math
+
+SLIDE 4
+Working Asset
+
+SLIDE 5
+Learning + Experiments
+
+Maximum:
+
+5 slides / 2 pages according to the challenge.
+
+---
+
+# 80. AI LEARNING NOTES
+
+Create 3 examples.
+
+Format:
+
+WHAT I ASKED AI
+
+WHAT AI SUGGESTED
+
+WHAT I CHANGED
+
+WHY I CHANGED IT
+
+Example:
+
+AI suggested many acquisition channels.
+
+I rejected the excessive list because the challenge explicitly asks us to prioritize.
+
+Final:
+College clubs + WhatsApp communities + referrals + supporting channels.
+
+---
+
+# 81. VIDEO SCRIPT
+
+Create a concise 3-minute script.
+
+Structure:
+
+0:00–0:20
+Problem
+
+0:20–0:50
+Student insight
+
+0:50–1:15
+Growth strategy
+
+1:15–2:30
+Live product demo
+
+2:30–2:50
+Why the system can reach 500
+
+2:50–3:00
+What I would improve next
+
+---
+
+# 82. IF ANTHROPIC / OPENAI / GEMINI CREDENTIALS ARE UNAVAILABLE
+
+The product must still run.
+
+Use:
+
+DEMO_AI_MODE=true
+
+In demo mode:
+
+return deterministic realistic responses.
+
+Clearly display:
+
+"Demo AI mode"
+
+Do not claim live LLM functionality if no API key exists.
+
+---
+
+# 83. IF WHATSAPP CREDENTIALS ARE UNAVAILABLE
+
+Use:
+
+WHATSAPP_MODE=demo
+
+Create a simulated WhatsApp flow.
+
+Display:
+
+"WhatsApp integration ready — connect production credentials to activate live messaging."
+
+Do not pretend messages were sent.
+
+---
+
+# 84. IF EMAIL CREDENTIALS ARE UNAVAILABLE
+
+Use:
+
+EMAIL_MODE=demo
+
+Show message preview/log.
+
+Production provider can be connected later.
+
+---
+
+# 85. DEPLOYMENT
+
+Prefer a production-friendly stack.
+
+Recommended:
+
+Frontend/backend:
+Next.js + TypeScript
+
+Styling:
+Tailwind CSS
+
+UI:
+shadcn/ui or equivalent high-quality component library
+
+Database:
+PostgreSQL
+
+ORM:
+Prisma or equivalent
+
+Authentication:
+secure auth provider / implementation
+
+Charts:
+Recharts or equivalent
+
+LLM:
+provider abstraction
+
+Deployment:
+Vercel or suitable production platform
+
+Use alternatives if the existing project environment dictates otherwise.
+
+Do NOT rewrite an existing working codebase unnecessarily.
+
+---
+
+# 86. ENGINEERING PRINCIPLES
+
+Use:
+
+TypeScript
+strict typing
+clean components
+service layer
+validation
+error boundaries
+centralized configuration
+environment variables
+database migrations
+logging
+reusable utilities
+
+Avoid:
+
+massive components
+duplicated logic
+hardcoded analytics
+hardcoded secrets
+unnecessary dependencies
+dead code
+
+---
+
+# 87. BUILD ORDER
+
+DO NOT attempt to build everything randomly.
+
+Follow this sequence:
+
+PHASE 1
+Project setup
+Design system
+Database
+Authentication
+
+PHASE 2
+Landing page
+Registration
+Student dashboard
+
+PHASE 3
+Referral engine
+Referral dashboard
+Leaderboard
+
+PHASE 4
+Campaign attribution
+Admin dashboard
+Analytics
+
+PHASE 5
+WhatsApp/email architecture
+Messaging
+
+PHASE 6
+AI assistant
+AI project generator
+
+PHASE 7
+Workshop room
+Project submission
+AI evaluation
+
+PHASE 8
+Campaign simulator
+A/B testing
+AI growth insights
+
+PHASE 9
+Polish
+Responsive design
+Security
+Testing
+
+PHASE 10
+Submission materials
+Demo data
+Demo walkthrough
+README
+
+---
+
+# 88. CRITICAL EXECUTION RULE
+
+After each phase:
+
+1. Run the application.
+2. Test the functionality.
+3. Fix errors.
+4. Inspect the UI.
+5. Continue only after the current phase is stable.
+
+Do not accumulate dozens of broken features.
+
+---
+
+# 89. FINAL ACCEPTANCE CHECKLIST
+
+Before declaring completion, verify:
+
+[ ] Landing page works
+[ ] Registration works
+[ ] Database stores registration
+[ ] Duplicate registration prevented
+[ ] Referral code generated
+[ ] Referral link works
+[ ] Referral attribution works
+[ ] Self-referral prevented
+[ ] Leaderboard works
+[ ] College tracking works
+[ ] Campaign attribution works
+[ ] UTM tracking works
+[ ] Admin authentication works
+[ ] Admin dashboard works
+[ ] 500 target works
+[ ] Funnel analytics works
+[ ] Channel analytics works
+[ ] Campaign simulator works
+[ ] AI assistant works or clearly enters demo mode
+[ ] AI project generator works
+[ ] WhatsApp integration works or clearly enters demo mode
+[ ] Email integration works or clearly enters demo mode
+[ ] Workshop room works
+[ ] Project submission works
+[ ] AI evaluation works or clearly enters demo mode
+[ ] AI campaign insights work
+[ ] A/B testing infrastructure works
+[ ] Mobile responsive
+[ ] Desktop responsive
+[ ] Loading states
+[ ] Error states
+[ ] Empty states
+[ ] Form validation
+[ ] Accessibility basics
+[ ] No secrets exposed
+[ ] README complete
+[ ] .env.example complete
+[ ] Demo data available
+[ ] Demo mode clearly identified
+[ ] Submission materials prepared
+
+---
+
+# 90. MOST IMPORTANT INSTRUCTION
+
+Do not stop at a visually attractive prototype.
+
+The objective is:
+
+# BUILD A FUNCTIONAL, DEMONSTRABLE, END-TO-END GROWTH PRODUCT.
+
+The evaluator should be able to understand:
+
+1. The student problem.
+2. The growth strategy.
+3. Why referrals matter.
+4. How channels are measured.
+5. How the system tracks the path to 500.
+6. How AI is actually useful.
+7. How the campaign can be optimized.
+8. How the workshop experience continues after registration.
+9. How the product creates a growth loop.
+10. Why this demonstrates ownership and judgment.
+
+At the end of the build, provide:
+
+A. Application URL
+B. Admin demo credentials if applicable
+C. Student demo credentials if applicable
+D. Feature list
+E. Architecture summary
+F. Setup instructions
+G. Environment variables required
+H. Known limitations
+I. Production integration steps
+J. 3-minute demo flow
+K. 5-slide submission content
+L. AI learning notes
+
+Do not claim anything was deployed, integrated, sent, measured, or tested unless it actually was.
+
+Build the strongest complete version possible.
+
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-04T09:40:01+05:30.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Claude Opus 4.6 (Thinking). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

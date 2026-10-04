@@ -1,0 +1,4 @@
+node_modules/
+.env
+data/ai60.db
+data/ai_usage.log
