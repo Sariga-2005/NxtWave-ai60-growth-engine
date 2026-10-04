@@ -117,7 +117,6 @@ function switchView(viewName, updateHash = true) {
   // Refresh view-specific data
   if (viewName === 'admin') loadAdminData();
   if (viewName === 'student') refreshStudentDashboard();
-  if (viewName === 'ai-hub') loadAiHubData();
 }
 
 function updateAuthUI() {
@@ -461,90 +460,7 @@ function shareReferralWhatsApp() {
   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
-// ============================================================================
-// AI WORKSHOP ASSISTANT (APPROVED KNOWLEDGE BASE)
-// ============================================================================
-function sendQuickPrompt(promptText) {
-  document.getElementById('chat-input-text').value = promptText;
-  sendChatMessage();
-}
 
-async function sendChatMessage() {
-  const input = document.getElementById('chat-input-text');
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  const box = document.getElementById('chat-messages-box');
-  // Append user bubble
-  const userBubble = document.createElement('div');
-  userBubble.className = 'chat-bubble user';
-  userBubble.textContent = msg;
-  box.appendChild(userBubble);
-  input.value = '';
-  box.scrollTop = box.scrollHeight;
-
-  // Typing placeholder
-  const botBubble = document.createElement('div');
-  botBubble.className = 'chat-bubble bot';
-  botBubble.innerHTML = '<em>Consulting workshop knowledge base...</em>';
-  box.appendChild(botBubble);
-  box.scrollTop = box.scrollHeight;
-
-  try {
-    const res = await fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg })
-    });
-    const data = await res.json();
-    botBubble.textContent = data.response || "I don't have enough verified information to answer that accurately.";
-  } catch (err) {
-    botBubble.textContent = "The workshop covers: 60-minute MVP build, prompt engineering, zero install cloud setup, and automated rubric evaluation. All engineering branches are welcome!";
-  }
-  box.scrollTop = box.scrollHeight;
-}
-
-// ============================================================================
-// AI PROJECT IDEA GENERATOR
-// ============================================================================
-async function generateProjectIdea() {
-  const domain = document.getElementById('idea-domain').value;
-  const skill = document.getElementById('idea-skill').value;
-  const resBox = document.getElementById('idea-result-box');
-
-  try {
-    const res = await fetch('/api/ai/project-idea', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ domain, skill_level: skill, branch: 'CSE' })
-    });
-    const data = await res.json();
-    const idea = data.idea;
-    if (idea) {
-      document.getElementById('idea-title').textContent = idea.title;
-      document.getElementById('idea-difficulty').textContent = idea.difficulty;
-      document.getElementById('idea-problem').textContent = idea.problem;
-      document.getElementById('idea-mvp').textContent = idea.sixty_min_mvp;
-      resBox.style.display = 'block';
-      STATE.currentIdea = idea;
-    }
-  } catch (e) {
-    resBox.style.display = 'block';
-  }
-}
-
-async function saveProjectIdea() {
-  if (!STATE.currentIdea) return;
-  const token = localStorage.getItem('ai60_user_token');
-  if (token) {
-    await fetch('/api/ai/save-idea', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ idea: STATE.currentIdea })
-    }).catch(e => console.warn(e));
-  }
-  showToast('Project idea saved to your student profile!');
-}
 
 // ============================================================================
 // LEADERBOARD
@@ -578,37 +494,7 @@ async function loadLeaderboard() {
   }
 }
 
-// ============================================================================
-// WORKSHOP ROOM
-// ============================================================================
-function updateWorkshopMilestones() {
-  const checks = [
-    document.getElementById('check-1').checked,
-    document.getElementById('check-2').checked,
-    document.getElementById('check-3').checked,
-    document.getElementById('check-4').checked
-  ];
-  const completed = checks.filter(Boolean).length;
-  const pct = Math.round((completed / 4) * 100);
 
-  document.getElementById('workshop-progress-pct').textContent = `${pct}% Complete`;
-  document.getElementById('workshop-progress-fill').style.width = `${pct}%`;
-
-  // Persist to backend if student logged in
-  const token = localStorage.getItem('ai60_user_token');
-  if (token) {
-    fetch('/api/workshop/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ progress: pct, status: pct === 100 ? 'completed' : 'in_progress' })
-    }).catch(e => console.warn(e));
-  }
-}
-
-// Stream toggle placeholder
-function toggleStreamSimulation() {
-  showToast('Workshop stream will begin when the session starts.');
-}
 
 // ============================================================================
 // PROJECT SUBMISSION & AUTOMATED AI EVALUATION
@@ -652,13 +538,6 @@ async function submitProjectForEvaluation() {
 
     document.getElementById('eval-proj-title').textContent = title;
     document.getElementById('eval-overall-score').textContent = ev.score || 0;
-    document.getElementById('score-clarity').textContent = `${ev.problem_clarity || 0}%`;
-    document.getElementById('score-ai').textContent = `${ev.ai_usage_score || 0}%`;
-    document.getElementById('score-func').textContent = `${ev.functionality || 0}%`;
-    document.getElementById('score-ux').textContent = `${ev.ux_score || 0}%`;
-    document.getElementById('score-orig').textContent = `${ev.originality || 0}%`;
-    document.getElementById('score-tech').textContent = `${ev.technical || 0}%`;
-    document.getElementById('score-comp').textContent = `${ev.completeness || 0}%`;
 
     document.getElementById('eval-result-container').scrollIntoView({ behavior: 'smooth' });
     showToast(`Evaluation Complete! Overall Score: ${ev.score || 0}/100.`);
@@ -724,15 +603,6 @@ async function loadAdminData() {
       const ambData = await ambRes.json();
       renderAmbassadorsTable(ambData.ambassadors || []);
     }
-
-    // 4. Fetch Experiments
-    const expRes = await fetch('/api/admin/experiments', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (expRes.ok) {
-      const expData = await expRes.json();
-      renderExperimentsList(expData.experiments || []);
-    }
   } catch (err) {
     console.warn('Admin data load err', err);
   }
@@ -796,254 +666,45 @@ function renderAmbassadorsTable(ambs) {
   });
 }
 
-function renderExperimentsList(exps) {
-  const container = document.getElementById('admin-experiments-list');
-  if (!container) return;
-  container.innerHTML = '';
-
-  if (exps.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;">No A/B experiments configured yet.</div>';
-    return;
-  }
-  exps.forEach(e => {
-    const card = document.createElement('div');
-    card.style.background = 'var(--bg-surface)';
-    card.style.borderRadius = 'var(--radius-md)';
-    card.style.padding = '1rem';
-    card.style.border = '1px solid var(--border-light)';
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-        <strong style="color:var(--text-white); font-size:0.9rem;">${e.name}</strong>
-        <span class="card-tag" style="background:rgba(16,185,129,0.15); color:var(--emerald-primary);">${e.status || 'Active Test'}</span>
-      </div>
-      <div style="font-size:0.78rem; color:var(--text-secondary); display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:0.4rem;">
-        <div style="background:var(--bg-card); padding:0.5rem; border-radius:var(--radius-sm);">
-          <strong>Variant A:</strong> "${e.variant_a}"<br>
-          <span style="color:var(--emerald-primary); font-weight:600;">${e.variant_a_registrations || 0} Regs</span>
-        </div>
-        <div style="background:var(--bg-card); padding:0.5rem; border-radius:var(--radius-sm);">
-          <strong>Variant B:</strong> "${e.variant_b}"<br>
-          <span style="color:var(--cyan-primary); font-weight:600;">${e.variant_b_registrations || 0} Regs</span>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-async function generateAiInsights() {
-  showToast('AI Growth Copilot analyzing channel velocities...');
-  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
-  try {
-    const res = await fetch('/api/admin/insights', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      showToast('AI Growth Insights Refreshed with active data!');
-    }
-  } catch (e) {
-    showToast('AI Insights updated.');
-  }
-}
-
-function exportRegistrationsCsv() {
-  window.open('/api/admin/export/registrations', '_blank');
-  showToast('Exporting registrations CSV...');
-}
-
-// Multichannel Messages
-const MSG_TEMPLATES = {
-  reminder_24h: "Your AI60 workshop starts in 24 hours! Keep your laptop ready. Know a friend who wants to build too? Share your link to unlock starter repos: {{referral_url}}",
-  referral_booster: "🚀 Squad Challenge: Invite 3 batchmates to the AI60 live workshop and unlock our complete library of 5 production AI templates. Your personal link: {{referral_url}}",
-  final_1h: "🔴 We go live in 1 hour! Get ready to build your first AI project in 60 minutes. Join here: {{workshop_url}}"
-};
-
-function loadMessageTemplate() {
-  const sel = document.getElementById('msg-template-select').value;
-  const body = document.getElementById('msg-body');
-  if (MSG_TEMPLATES[sel]) body.value = MSG_TEMPLATES[sel];
-}
-
-async function sendBroadcastMessage() {
+// ============================================================================
+// MESSAGE STUDIO
+// ============================================================================
+function generateMessageVariants() {
+  const container = document.getElementById('message-variants-container');
   const audience = document.getElementById('msg-audience').value;
-  const body = document.getElementById('msg-body').value;
-  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
-
-  showToast('Queueing message broadcast...');
-  try {
-    const res = await fetch('/api/admin/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ body, audience_filter: audience, channel: 'whatsapp', status: 'sent' })
-    });
-    const data = await res.json();
-    const count = data.recipients || STATE.registeredCount;
-    document.getElementById('msg-status-text').textContent = `✅ Broadcast queued for ${count} students`;
-    showToast(`Message queued for ${count} students.`);
-  } catch (err) {
-    document.getElementById('msg-status-text').textContent = '⚠️ Failed to queue broadcast';
-  }
-}
-
-// ============================================================================
-// AI HUB & OBSERVABILITY
-// ============================================================================
-async function loadAiHubData() {
-  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
-  if (!token) return;
-
-  try {
-    const healthRes = await fetch('/api/admin/ai/health', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (healthRes.ok) {
-      const data = await healthRes.json();
-      renderAiHealth(data.health);
-    }
-    const usageRes = await fetch('/api/admin/ai/usage', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (usageRes.ok) {
-      const data = await usageRes.json();
-      renderAiUsage(data.usage);
-    }
-    const kbRes = await fetch('/api/admin/knowledge', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (kbRes.ok) {
-      const data = await kbRes.json();
-      renderKnowledgeBase(data.knowledge);
-    }
-  } catch (err) {
-    console.warn('AI Hub load error', err);
-  }
-}
-
-function renderAiHealth(health) {
-  const container = document.getElementById('ai-health-container');
+  const tone = document.getElementById('msg-tone').value;
+  
   if (!container) return;
-  container.innerHTML = '';
   
-  if (!health || Object.keys(health).length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No providers configured.</div>';
-    return;
-  }
+  showToast('Generating AI variants...');
   
-  Object.keys(health).forEach(provider => {
-    const info = health[provider];
-    const isHealthy = info.status === 'HEALTHY';
-    const row = document.createElement('div');
-    row.style = `display:flex; justify-content:space-between; padding:0.75rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); margin-bottom:0.5rem;`;
-    row.innerHTML = `
-      <div>
-        <strong>${provider}</strong>
-        <div style="font-size:0.75rem; color:var(--text-muted);">${info.model || 'Unknown model'}</div>
+  // Simulated AI response for Message Studio
+  setTimeout(() => {
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '1rem';
+    
+    container.innerHTML = `
+      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 1 (Direct)</div>
+        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Join us for the AI60 Workshop! Build your first AI project in 60 minutes and boost your resume. Link: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var1</p>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
       </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end;">
-        <span class="card-tag" style="background:${isHealthy ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${isHealthy ? 'var(--emerald-primary)' : 'var(--red-primary)'};">${info.status}</span>
+      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 2 (${tone} angle)</div>
+        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Only a few seats left! Don't miss out on building a real AI app this weekend. Link: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var2</p>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
+      </div>
+      <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">Variant 3 (Value driven)</div>
+        <p style="font-size:0.9rem; margin-bottom:0.75rem;">Learn prompt engineering and API integration in just 1 hour. No prior AI experience needed. Register free: https://ai60.nxtwave.tech/?utm_source=${audience}&utm_campaign=var3</p>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Link copied!')">Copy Message</button>
       </div>
     `;
-    container.appendChild(row);
-  });
+  }, 1000);
 }
 
-function renderAiUsage(logs) {
-  if (!logs) return;
-  const totalRequests = logs.length;
-  const fallbacks = logs.filter(l => l.fallback_used).length;
-  const successes = logs.filter(l => l.status === 'SUCCESS').length;
-  
-  const fallbackRate = totalRequests > 0 ? Math.round((fallbacks / totalRequests) * 100) : 0;
-  const successRate = totalRequests > 0 ? Math.round((successes / totalRequests) * 100) : 0;
-  
-  document.getElementById('ai-total-requests').textContent = totalRequests;
-  document.getElementById('ai-fallback-rate').textContent = `${fallbackRate}%`;
-  document.getElementById('ai-success-rate').textContent = `${successRate}%`;
-  
-  // Fake cost estimation based on logs
-  const cost = (totalRequests * 0.05).toFixed(2);
-  document.getElementById('ai-est-cost').textContent = `₹${cost}`;
-}
 
-async function triggerFailureSim(provider) {
-  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
-  try {
-    const res = await fetch('/api/admin/ai/simulate-failure', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ provider: provider.charAt(0).toUpperCase() + provider.slice(1) })
-    });
-    if (res.ok) {
-      showToast(`Simulated outage for ${provider}. Will auto-recover in 60s.`);
-      setTimeout(loadAiHubData, 1000);
-    }
-  } catch(e) {}
-}
-
-async function runSimulationTest() {
-  const resEl = document.getElementById('sim-test-result');
-  resEl.style.display = 'block';
-  resEl.textContent = 'Running fallback test (requesting project idea)...\n';
-  const token = localStorage.getItem('ai60_user_token'); // Needs user token
-  
-  try {
-    const res = await fetch('/api/ai/project-idea', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ domain: 'Test Simulator', skill_level: 'Beginner', branch: 'CSE' })
-    });
-    const data = await res.json();
-    if (data.idea) {
-      resEl.textContent += `Success! Answered by: ${data.provider} (${data.model})\n`;
-      if (data.provider === 'DEMO') {
-        resEl.textContent += `Note: Responded in safe DEMO mode because all providers failed.`;
-      }
-    } else {
-      resEl.textContent += `Failed to generate project idea.`;
-    }
-    setTimeout(loadAiHubData, 1000);
-  } catch(e) {
-    resEl.textContent += `Request error: ${e.message}`;
-  }
-}
-
-async function addKnowledgeFact() {
-  const title = document.getElementById('kb-title').value.trim();
-  const content = document.getElementById('kb-content').value.trim();
-  if (!title || !content) return showToast('Please provide both title and content.', 'error');
-  
-  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
-  try {
-    const res = await fetch('/api/admin/knowledge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ title, content })
-    });
-    if (res.ok) {
-      document.getElementById('kb-title').value = '';
-      document.getElementById('kb-content').value = '';
-      showToast('Knowledge fact added successfully!');
-      loadAiHubData();
-    }
-  } catch(e) {}
-}
-
-function renderKnowledgeBase(kbList) {
-  const container = document.getElementById('kb-list-container');
-  if (!container) return;
-  container.innerHTML = '';
-  
-  if (!kbList || kbList.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No knowledge facts added yet.</div>';
-    return;
-  }
-  
-  kbList.forEach(item => {
-    const row = document.createElement('div');
-    row.style = `padding:0.75rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); margin-bottom:0.5rem;`;
-    row.innerHTML = `
-      <div style="font-weight:700; margin-bottom:0.2rem;">${item.title}</div>
-      <div style="font-size:0.8rem; color:var(--text-secondary);">${item.content}</div>
-    `;
-    container.appendChild(row);
-  });
-}
 
 // ============================================================================
 // 5-SLIDE GROWTH STRATEGY DECK

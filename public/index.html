@@ -38,15 +38,13 @@
             <button class="nav-tab-btn active" data-view="landing" onclick="switchView('landing')">Home</button>
             <button class="nav-tab-btn" data-view="quiz" onclick="switchView('quiz')">Fit Quiz</button>
             <button class="nav-tab-btn auth-required" data-view="student" onclick="switchView('student')">Dashboard</button>
-            <button class="nav-tab-btn auth-required" data-view="workshop" onclick="switchView('workshop')">Workshop Room</button>
-            <button class="nav-tab-btn auth-required" data-view="submit" onclick="switchView('submit')">My Projects</button>
+            <button class="nav-tab-btn auth-required" data-view="submit" onclick="switchView('submit')">My Project</button>
+            <button class="nav-tab-btn" data-view="strategy" onclick="switchView('strategy')">Strategy</button>
           </nav>
           
           <!-- Admin Navigation (Hidden by default) -->
           <nav class="nav-tabs-wrapper admin-nav" aria-label="Admin Navigation" style="display: none;">
             <button class="nav-tab-btn" data-view="admin" onclick="switchView('admin')">Growth OS</button>
-            <button class="nav-tab-btn" data-view="strategy" onclick="switchView('strategy')">Campaigns</button>
-            <button class="nav-tab-btn" data-view="ai-hub" onclick="switchView('ai-hub')">AI Hub</button>
           </nav>
 
           <!-- Header Actions -->
@@ -99,7 +97,7 @@
             </span>
             <span class="badge-item">
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              Verified Project Evaluation
+              AI Build Score & Card
             </span>
           </div>
 
@@ -110,8 +108,8 @@
             <button class="btn btn-secondary btn-lg" onclick="switchView('quiz')">
               <span>🎯</span> Take 1-Min Fit Quiz
             </button>
-            <button class="btn btn-outline btn-lg" onclick="switchView('workshop')">
-              <span>💻</span> Explore Workshop Room
+            <button class="btn btn-outline btn-lg" onclick="switchView('strategy')">
+              <span>📊</span> See Our Growth Plan
             </button>
           </div>
 
@@ -176,7 +174,7 @@
               <div class="timeline-time-badge">00:00 – 00:10 MIN</div>
               <div class="timeline-card">
                 <h3>Understand the Problem & Architecture</h3>
-                <p>Deconstruct the target use-case, set up the zero-install cloud workspace, and configure API endpoints without local environment friction.</p>
+                <p>Deconstruct the target use-case, set up your development environment, and configure API endpoints in minutes.</p>
               </div>
             </div>
 
@@ -212,7 +210,7 @@
               <div class="timeline-time-badge">00:50 – 01:00 MIN</div>
               <div class="timeline-card">
                 <h3>Demo, Automated AI Evaluation & Peer Showcase</h3>
-                <p>Submit your GitHub repository, receive an instant 7-point automated rubric evaluation, and generate your LinkedIn build credential.</p>
+                <p>Submit your GitHub repository, receive an AI Build Score across 5 criteria, and generate a shareable Build Card for your portfolio.</p>
               </div>
             </div>
           </div>
@@ -300,22 +298,17 @@
                 <div class="milestone-item">
                   <div class="milestone-icon">📘</div>
                   <div class="milestone-title">1 Friend Joins</div>
-                  <div class="milestone-req">Unlock AI Prompt Engineering Handbook & Cheat Sheet</div>
+                  <div class="milestone-req">Unlock AI Prompt Engineering Cheat Sheet</div>
                 </div>
                 <div class="milestone-item">
                   <div class="milestone-icon">⚡</div>
                   <div class="milestone-title">3 Friends Join</div>
-                  <div class="milestone-req">Unlock 5 Complete Project GitHub Starter Repositories</div>
+                  <div class="milestone-req">Access 5 Curated Project Starter Repos</div>
                 </div>
                 <div class="milestone-item">
                   <div class="milestone-icon">🎯</div>
                   <div class="milestone-title">5 Friends Join</div>
-                  <div class="milestone-req">Priority 1-on-1 AI Project Review by Industry Mentors</div>
-                </div>
-                <div class="milestone-item">
-                  <div class="milestone-icon">🏆</div>
-                  <div class="milestone-title">10 Friends Join</div>
-                  <div class="milestone-req">Campus Growth Ambassador Hall of Fame & LinkedIn Rec</div>
+                  <div class="milestone-req">Priority Project Review (first in evaluation queue)</div>
                 </div>
               </div>
 
@@ -328,30 +321,33 @@
           </div>
         </section>
 
-        <!-- College Social Proof -->
+        <!-- Who It's For Section -->
         <section class="section-padding" style="padding-top: 0;">
           <div class="container">
             <div class="section-head">
-              <div class="section-subtitle">Campus Participation</div>
-              <h2>Students Registered From 30+ Engineering Colleges</h2>
-              <p>Join final-year engineering students from leading institutes across India.</p>
+              <div class="section-subtitle">Is This For You?</div>
+              <h2>Who Should Register</h2>
+              <p>This workshop is designed for final-year engineering students across all branches.</p>
             </div>
-            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.75rem; max-width:960px; margin:0 auto;">
-              <span class="badge-item">Amrita Vishwa Vidyapeetham</span>
-              <span class="badge-item">VIT Vellore</span>
-              <span class="badge-item">SRM University</span>
-              <span class="badge-item">BITS Pilani</span>
-              <span class="badge-item">NIT Trichy</span>
-              <span class="badge-item">NIT Warangal</span>
-              <span class="badge-item">IIIT Hyderabad</span>
-              <span class="badge-item">JNTU Hyderabad</span>
-              <span class="badge-item">Anna University</span>
-              <span class="badge-item">Manipal Institute</span>
-              <span class="badge-item">PES University</span>
-              <span class="badge-item">RV College of Engineering</span>
-              <span class="badge-item">PSG Tech</span>
-              <span class="badge-item">SSN Chennai</span>
-              <span class="badge-item">+ 16 more institutes</span>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; max-width:800px; margin:0 auto;">
+              <div style="background:var(--bg-card); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-light);">
+                <h4 style="color:var(--emerald-primary); margin-bottom:0.75rem;">✅ Great fit if you...</h4>
+                <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem; color:var(--text-secondary);">
+                  <li>• Are in your final year (any engineering branch)</li>
+                  <li>• Know basic programming (variables, functions, APIs)</li>
+                  <li>• Want a portfolio project with real AI</li>
+                  <li>• Have 60 minutes and a laptop with internet</li>
+                </ul>
+              </div>
+              <div style="background:var(--bg-card); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-light);">
+                <h4 style="color:var(--amber-primary); margin-bottom:0.75rem;">⚠️ Not ideal if you...</h4>
+                <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:0.5rem; font-size:0.9rem; color:var(--text-secondary);">
+                  <li>• Have zero coding experience (learn basics first)</li>
+                  <li>• Want an advanced ML/deep learning course</li>
+                  <li>• Expect a certificate without building anything</li>
+                  <li>• Can't commit 60 focused minutes</li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -397,11 +393,11 @@
 
               <div class="faq-card">
                 <button class="faq-question" onclick="toggleFaq(this)">
-                  <span>Will I receive a verified certificate or evaluation?</span>
+                  <span>Will I receive a project evaluation?</span>
                   <span class="faq-chevron">▼</span>
                 </button>
                 <div class="faq-answer">
-                  Yes! When you complete and submit your project GitHub repository, our automated AI evaluation rubric grades it across 7 key parameters and issues your verified builder badge.
+                  Yes! When you submit your project GitHub repository, our AI evaluator grades it across 5 criteria and generates your AI60 Build Score and a shareable Build Card.
                 </div>
               </div>
 
@@ -411,7 +407,7 @@
                   <span class="faq-chevron">▼</span>
                 </button>
                 <div class="faq-answer">
-                  Just your laptop, an active internet connection, and a web browser. All cloud development environments and starter templates will be provided with zero installation hassle.
+                  Just your laptop, an active internet connection, and a web browser. You'll need a free API key (we'll show you how to get one in 2 minutes) and a GitHub account.
                 </div>
               </div>
             </div>
@@ -424,14 +420,14 @@
             <div class="pipeline-card" style="padding: 3.5rem 2rem;">
               <h2 style="font-size: 2.25rem; margin-bottom: 1rem;">Ready to Build Your First AI App?</h2>
               <p style="max-width: 600px; margin: 0 auto 2rem;">
-                Join 426 motivated engineering students this weekend. Only 74 seats remaining before registration locks.
+                60 minutes. One working AI project. A Build Card for your portfolio. Register now — it's completely free.
               </p>
               <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
                 <button class="btn btn-emerald btn-lg" onclick="openRegisterModal()">
-                  <span>⚡</span> Claim My Free Seat Now
+                  <span>⚡</span> Register Free Now
                 </button>
                 <button class="btn btn-secondary btn-lg" onclick="switchView('quiz')">
-                  <span>🎯</span> Check My Match Score
+                  <span>🎯</span> Take the Fit Quiz First
                 </button>
               </div>
             </div>
@@ -475,19 +471,14 @@
 
           <!-- Quiz Results Screen -->
           <div id="quiz-result-box" style="display: none;" class="quiz-result-card">
-            <div class="fit-score-ring">
-              <div class="fit-score-num" id="fit-score-val">94%</div>
-              <div class="fit-score-label">MATCH</div>
-            </div>
-
-            <h2 style="font-size: 1.75rem; margin-bottom: 0.75rem;">You Are an Ideal Fit!</h2>
+            <h2 style="font-size: 1.75rem; margin-bottom: 0.75rem;">Great Fit!</h2>
             <p id="fit-score-reason" style="font-size: 0.95rem; color: var(--text-secondary); max-width: 500px; margin: 0 auto 2rem; line-height: 1.6;">
               Based on your answers, this workshop will bridge the gap between theoretical coding knowledge and building a live, demonstrable AI application for your resume.
             </p>
 
             <div style="background: var(--bg-surface); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 2rem; text-align: left;">
-              <div style="font-size: 0.78rem; font-weight: 700; color: var(--cyan-primary); text-transform: uppercase; margin-bottom: 0.5rem;">Recommended Project For You</div>
-              <div id="quiz-rec-project" style="font-weight: 700; color: var(--text-white); font-size: 1.1rem;">AI Resume Feedback Assistant</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--cyan-primary); text-transform: uppercase; margin-bottom: 0.5rem;">Recommended Project Track</div>
+              <div id="quiz-rec-project" style="font-weight: 700; color: var(--text-white); font-size: 1.1rem;">Study Assistant</div>
               <p id="quiz-rec-desc" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
                 A high-impact project you can complete in 60 minutes and immediately discuss in tech interviews.
               </p>
@@ -495,7 +486,7 @@
 
             <div style="display: flex; justify-content: center; gap: 1rem;">
               <button class="btn btn-emerald btn-lg" onclick="proceedFromQuizToRegister()">
-                <span>⚡</span> Reserve My Spot With This Profile
+                <span>⚡</span> Continue to Registration
               </button>
             </div>
           </div>
@@ -512,51 +503,20 @@
             <div>
               <div style="display:flex; align-items:center; gap:0.5rem;">
                 <h2 id="student-name-display" style="font-size: 1.5rem;">Student Dashboard</h2>
-                <span class="intent-pill intent-high" id="student-intent-pill">HIGH INTENT</span>
               </div>
               <p id="student-college-display" style="font-size: 0.85rem; color: var(--text-secondary);">
                 Amrita Vishwa Vidyapeetham • CSE
               </p>
             </div>
           </div>
-
-          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="switchView('workshop')">
-              <span>💻</span> Enter Workshop Room
-            </button>
-            <button class="btn btn-emerald btn-sm" onclick="shareReferralWhatsApp()">
-              <span>💬</span> Invite Friends on WhatsApp
-            </button>
-          </div>
-        </div>
-
-        <!-- Student Referral Engine Metrics -->
-        <div class="kpi-row-3">
-          <div class="kpi-card">
-            <div class="kpi-card-label">Friends Invited</div>
-            <div class="kpi-card-value" id="student-invited-count">8</div>
-            <div class="kpi-card-sub">Unique link clicks tracked</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-label">Successful Registrations</div>
-            <div class="kpi-card-value" id="student-registered-count" style="color:var(--emerald-primary)">5</div>
-            <div class="kpi-card-sub">Qualified student peers</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-label">Referral Conversion Rate</div>
-            <div class="kpi-card-value" id="student-conv-rate" style="color:var(--cyan-primary)">62.5%</div>
-            <div class="kpi-card-sub">Above campus average (41%)</div>
-          </div>
         </div>
 
         <!-- Personal Referral Link Box -->
-        <div class="referral-box" style="margin-top: 0; margin-bottom: 2rem;">
+        <div class="referral-box" style="margin-top: 1.5rem; margin-bottom: 2rem;">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
             <div>
-              <h3 style="font-size: 1.15rem; color: var(--text-white); margin-bottom: 0.25rem;">Your Personal Viral Referral Link</h3>
-              <p style="font-size: 0.85rem;">Share this unique link with batchmates. Track live registrations and unlock project starter repos.</p>
+              <h3 style="font-size: 1.15rem; color: var(--text-white); margin-bottom: 0.25rem;">Your Personal Referral Link</h3>
+              <p style="font-size: 0.85rem;">Share this unique link with batchmates. Unlock project starter repos when they join.</p>
             </div>
             <div style="font-size: 0.8rem; font-weight:700; color:var(--emerald-primary); background:var(--emerald-surface); padding:0.3rem 0.75rem; border-radius:var(--radius-full);">
               Code: <span id="student-ref-code-display">AMR882</span>
@@ -578,11 +538,11 @@
         <div class="milestones-card">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
             <div>
-              <h3>Referral Milestone Rewards</h3>
-              <p style="font-size:0.85rem;">Proposed campaign incentives to maximize viral coefficient</p>
+              <h3>Referral Milestones</h3>
+              <p style="font-size:0.85rem;">Progress toward unlockable resources</p>
             </div>
             <div style="font-size:0.85rem; color:var(--cyan-primary); font-weight:600;">
-              Progress: <span id="milestone-progress-text">5 / 10 Referrals</span>
+              Progress: <span id="milestone-progress-text">0 / 5 Referrals</span>
             </div>
           </div>
 
@@ -592,108 +552,20 @@
               <div class="milestone-title">1 Referral</div>
               <div class="milestone-req">AI Prompt Engineering Cheat Sheet</div>
             </div>
-            <div class="milestone-item unlocked">
+            <div class="milestone-item">
               <div class="milestone-icon">⚡</div>
               <div class="milestone-title">3 Referrals</div>
               <div class="milestone-req">5 Working AI GitHub Repositories</div>
             </div>
-            <div class="milestone-item unlocked">
+            <div class="milestone-item">
               <div class="milestone-icon">🎯</div>
               <div class="milestone-title">5 Referrals</div>
               <div class="milestone-req">Priority 1-on-1 Mentor Code Review</div>
             </div>
-            <div class="milestone-item">
-              <div class="milestone-icon">🏆</div>
-              <div class="milestone-title">10 Referrals</div>
-              <div class="milestone-req">Campus Growth Ambassador Hall of Fame</div>
-            </div>
           </div>
         </div>
 
-        <!-- Dual Column: AI Project Generator & AI Prep Assistant -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2.5rem;">
-          <!-- AI Project Idea Generator -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-              <span style="font-size:1.3rem;">💡</span>
-              <h3>AI Project Idea Generator</h3>
-            </div>
-            <p style="font-size:0.82rem; margin-bottom:1.25rem;">Generate customized 60-minute MVP project blueprints tailored to your branch & interests.</p>
 
-            <div class="form-grid-2" style="margin-bottom:1rem;">
-              <div class="form-group">
-                <label class="form-label">Domain Interest</label>
-                <select id="idea-domain" class="form-select">
-                  <option value="Education">Education & EdTech</option>
-                  <option value="Career">Career & HR Tech</option>
-                  <option value="Developer Tools">Developer Tools</option>
-                  <option value="Campus Life">Campus Automation</option>
-                  <option value="Finance">Personal Finance</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Coding Comfort</label>
-                <select id="idea-skill" class="form-select">
-                  <option value="Beginner">Beginner (Zero prior AI)</option>
-                  <option value="Intermediate">Intermediate (Basic JS/Python)</option>
-                </select>
-              </div>
-            </div>
-
-            <button class="btn btn-primary btn-block" onclick="generateProjectIdea()">
-              <span>✨</span> Generate 60-Min Project Blueprint
-            </button>
-
-            <!-- Generated Idea Card Result -->
-            <div id="idea-result-box" style="margin-top:1.25rem; display:none; background:var(--bg-surface); border-radius:var(--radius-md); padding:1rem; border:1px solid var(--border-light);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                <h4 id="idea-title" style="color:var(--cyan-primary);">AI Resume Feedback Assistant</h4>
-                <span class="card-tag" id="idea-difficulty">Beginner</span>
-              </div>
-              <p id="idea-problem" style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.6rem;">
-                Helps students optimize bullet points for ATS screening.
-              </p>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
-                <strong>60-Min MVP:</strong> <span id="idea-mvp">Simple form input → LLM prompt analysis → Formatted scores.</span>
-              </div>
-              <button class="btn btn-secondary btn-sm" onclick="saveProjectIdea()">
-                💾 Save Idea to My Account
-              </button>
-            </div>
-          </div>
-
-          <!-- AI Workshop Assistant (Approved Knowledge Base) -->
-          <div class="ai-assistant-wrapper" style="margin-bottom:0; height:auto; min-height:420px;">
-            <div class="chat-header">
-              <div style="display:flex; align-items:center; gap:0.5rem;">
-                <div class="demo-pulse"></div>
-                <strong style="font-size:0.9rem; color:var(--text-white);">AI60 Workshop Assistant</strong>
-              </div>
-              <span style="font-size:0.72rem; color:var(--text-muted);">Strictly Grounded Knowledge</span>
-            </div>
-
-            <div class="quick-prompts-bar">
-              <span class="prompt-pill" onclick="sendQuickPrompt('Do I need Python to attend?')">Do I need Python?</span>
-              <span class="prompt-pill" onclick="sendQuickPrompt('What will I build in 60 minutes?')">What will I build?</span>
-              <span class="prompt-pill" onclick="sendQuickPrompt('Is this useful for campus placements?')">Useful for placements?</span>
-              <span class="prompt-pill" onclick="sendQuickPrompt('Can non-CS branches join?')">Non-CS branches?</span>
-            </div>
-
-            <div class="chat-messages-scroll" id="chat-messages-box">
-              <div class="chat-bubble bot">
-                Hi! I'm your AI60 Workshop Assistant. Ask me anything about the prerequisites, workshop timeline, project ideas, or referral rewards!
-              </div>
-            </div>
-
-            <div class="chat-input-bar">
-              <input type="text" id="chat-input-text" class="form-input" placeholder="Type a workshop question..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-              <button class="btn btn-primary btn-sm" onclick="sendChatMessage()">
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
 
         <!-- Campus Referral Leaderboard -->
         <div class="milestones-card">
@@ -714,9 +586,7 @@
                   <th>Rank</th>
                   <th>Student</th>
                   <th>College</th>
-                  <th>Branch</th>
                   <th>Confirmed Referrals</th>
-                  <th>Badge</th>
                 </tr>
               </thead>
               <tbody id="student-leaderboard-tbody">
@@ -733,120 +603,32 @@
       <section id="view-workshop" class="view-section">
         <div class="dashboard-head-banner" style="margin-bottom: 1.5rem;">
           <div>
-            <div style="display:flex; align-items:center; gap:0.6rem;">
-              <span class="stream-live-tag" style="position:static;" id="workshop-status-tag">UPCOMING</span>
-              <h2 style="font-size: 1.6rem;">AI60 Live Build Studio</h2>
-            </div>
+            <h2 style="font-size: 1.6rem;">AI60 Workshop Details</h2>
             <p style="font-size: 0.85rem; margin-top: 0.25rem;">
-              "Build Your First AI Project in 60 Minutes" • Live Hands-On Code Sprint
+              "Build Your First AI Project in 60 Minutes"
             </p>
-          </div>
-          <div style="display:flex; align-items:center; gap:1rem;">
-            <button class="btn btn-primary btn-sm" onclick="switchView('submit')">
-              Submit My Built Project →
-            </button>
           </div>
         </div>
 
-        <div class="workshop-grid">
-          <!-- Video Stream Placeholder -->
-          <div>
-            <div class="stream-player-card">
-              <div class="stream-overlay" style="background: var(--bg-surface);">
-                <div style="width:70px;height:70px;border-radius:50%;background:rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2rem;box-shadow:0 0 25px var(--accent-glow);">
-                  📹
-                </div>
-                <h3 style="color:var(--text-white); margin-bottom:0.25rem;">Workshop Video Stream</h3>
-                <p style="font-size:0.85rem; color:var(--text-secondary); max-width:400px; margin:0 auto;">
-                  The workshop recording will appear here when the session begins.
-                </p>
-              </div>
-            </div>
-
-            <!-- Milestone Progress Checklist -->
-            <div class="checklist-card" style="margin-top: 1.5rem;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <div>
-                  <h4>Interactive 60-Minute Build Milestones</h4>
-                  <p style="font-size:0.8rem; color:var(--text-muted);">Check off each milestone as you code along</p>
-                </div>
-                <div style="font-size:0.9rem; font-weight:700; color:var(--emerald-primary);" id="workshop-progress-pct">
-                  0% Complete
-                </div>
-              </div>
-
-              <div class="progress-track" style="margin-bottom:1.25rem; height:8px;">
-                <div id="workshop-progress-fill" class="progress-fill" style="width: 0%;"></div>
-              </div>
-
-              <div class="check-item">
-                <input type="checkbox" id="check-1" checked onchange="updateWorkshopMilestones()">
-                <label for="check-1" class="check-label completed">
-                  <strong>00–15m:</strong> Set up cloud dev environment & API keys
-                </label>
-              </div>
-
-              <div class="check-item">
-                <input type="checkbox" id="check-2" checked onchange="updateWorkshopMilestones()">
-                <label for="check-2" class="check-label completed">
-                  <strong>15–35m:</strong> Write systemic prompts & integrate LLM endpoint
-                </label>
-              </div>
-
-              <div class="check-item">
-                <input type="checkbox" id="check-3" checked onchange="updateWorkshopMilestones()">
-                <label for="check-3" class="check-label completed">
-                  <strong>35–50m:</strong> Connect input forms & style output UI components
-                </label>
-              </div>
-
-              <div class="check-item">
-                <input type="checkbox" id="check-4" onchange="updateWorkshopMilestones()">
-                <label for="check-4" class="check-label">
-                  <strong>50–60m:</strong> Push to GitHub & submit project for automated AI evaluation
-                </label>
-              </div>
-            </div>
+        <div class="milestones-card" style="max-width: 600px; margin: 0 auto;">
+          <h3 style="margin-bottom: 1rem;">Workshop Access</h3>
+          <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">The workshop link and instructions will be sent to your email 24 hours before the event.</p>
+          
+          <div style="background: var(--bg-surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+            <div style="font-weight: 600; margin-bottom: 0.5rem; color: var(--text-white);">60-Minute Outline:</div>
+            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+              <li>• <strong style="color: var(--cyan-primary)">00-10m:</strong> Setup & Problem Definition</li>
+              <li>• <strong style="color: var(--cyan-primary)">10-20m:</strong> Prompt Engineering</li>
+              <li>• <strong style="color: var(--cyan-primary)">20-40m:</strong> Core API Integration</li>
+              <li>• <strong style="color: var(--cyan-primary)">40-50m:</strong> UI & Polish</li>
+              <li>• <strong style="color: var(--cyan-primary)">50-60m:</strong> Evaluation & Deploy</li>
+            </ul>
           </div>
-
-          <!-- Live Chat & Resources Sidebar -->
-          <div>
-            <div class="ai-assistant-wrapper" style="height: 380px; margin-bottom:1.5rem;">
-              <div class="chat-header">
-                <strong style="font-size:0.85rem; color:var(--text-white);">💬 Live Workshop Q&A Stream</strong>
-                <span class="card-tag" id="workshop-online-count">Q&A</span>
-              </div>
-              <div class="chat-messages-scroll" id="workshop-chat-scroll" style="font-size:0.82rem;">
-                <div class="chat-bubble bot" style="font-size:0.82rem;">
-                  <strong>Instructor (NxtWave):</strong> Welcome everyone! Open your cloud editor tab. We are writing the prompt pipeline now.
-                </div>
-                <div class="chat-bubble user" style="font-size:0.82rem; background:var(--bg-surface); color:var(--text-primary); border-radius:var(--radius-lg);">
-                  <strong>Kavya S. (VIT):</strong> The API response is returning JSON format correctly! So fast.
-                </div>
-                <div class="chat-bubble user" style="font-size:0.82rem; background:var(--bg-surface); color:var(--text-primary); border-radius:var(--radius-lg);">
-                  <strong>Rohan M. (Amrita):</strong> What if temperature is set to 0.2? Does it make the resume feedback more deterministic?
-                </div>
-                <div class="chat-bubble bot" style="font-size:0.82rem;">
-                  <strong>Teaching Assistant:</strong> Exactly right Rohan! Lower temperature reduces hallucination for structured scoring.
-                </div>
-              </div>
-            </div>
-
-            <!-- Starter Downloads -->
-            <div class="checklist-card">
-              <h4>Workshop Tooling & Resources</h4>
-              <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.85rem;">
-                <a href="#submit" class="btn btn-outline btn-sm btn-block" style="text-align:left; justify-content:flex-start;">
-                  <span>📦</span> Download Project Starter Template
-                </a>
-                <a href="#submit" class="btn btn-outline btn-sm btn-block" style="text-align:left; justify-content:flex-start;">
-                  <span>📋</span> Copy System Prompt Architecture
-                </a>
-                <a href="#submit" class="btn btn-emerald btn-sm btn-block" onclick="switchView('submit')">
-                  <span>🚀</span> Jump to Project Submission & AI Rubric
-                </a>
-              </div>
-            </div>
+          
+          <div style="margin-top: 1.5rem; text-align: center;">
+            <button class="btn btn-primary" onclick="switchView('submit')">
+              Jump to Project Submission
+            </button>
           </div>
         </div>
       </section>
@@ -868,39 +650,39 @@
 
             <div class="form-group">
               <label class="form-label">Project Title *</label>
-              <input type="text" id="sub-title" class="form-input" value="AI Resume Feedback Assistant" placeholder="e.g. AI Resume Feedback Engine">
+              <input type="text" id="sub-title" class="form-input" placeholder="e.g. AI Resume Feedback Engine">
             </div>
 
             <div class="form-group">
               <label class="form-label">Problem Addressed *</label>
-              <textarea id="sub-desc" class="form-textarea" rows="2" placeholder="What student or industry problem does your AI app solve?">Helps final-year engineering students audit their resume against tech job descriptions, highlighting keyword deficiencies and scoring impact metrics.</textarea>
+              <textarea id="sub-desc" class="form-textarea" rows="2" placeholder="What student or industry problem does your AI app solve?"></textarea>
             </div>
 
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label">GitHub Repository URL *</label>
-                <input type="url" id="sub-github" class="form-input" value="https://github.com/student/ai-resume-assistant" placeholder="https://github.com/...">
+                <input type="url" id="sub-github" class="form-input" placeholder="https://github.com/...">
               </div>
 
               <div class="form-group">
                 <label class="form-label">Live Demo / Preview URL</label>
-                <input type="url" id="sub-demo" class="form-input" value="https://ai-resume-assistant.demo.app" placeholder="https://...">
+                <input type="url" id="sub-demo" class="form-input" placeholder="https://...">
               </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Technology Stack *</label>
-              <input type="text" id="sub-stack" class="form-input" value="Node.js, Express, OpenAI API, Vanilla CSS" placeholder="e.g. Python, Flask, Gemini API">
+              <input type="text" id="sub-stack" class="form-input" placeholder="e.g. Python, Flask, Gemini API">
             </div>
 
             <div class="form-group">
               <label class="form-label">What Does the AI Actually Do? *</label>
-              <textarea id="sub-ai-usage" class="form-textarea" rows="2" placeholder="Explain the exact prompt flow and model orchestration.">Ingests candidate resume text, passes it with a zero-shot rubric prompt to the LLM, and formats structured scoring across 5 ATS criteria.</textarea>
+              <textarea id="sub-ai-usage" class="form-textarea" rows="2" placeholder="Explain the exact prompt flow and model orchestration."></textarea>
             </div>
 
             <div class="form-group">
               <label class="form-label">Key Learnings in 60 Minutes *</label>
-              <textarea id="sub-learned" class="form-textarea" rows="2" placeholder="What did you learn about prompt design and API engineering?">Mastered handling JSON schema outputs, temperature control, and integrating real-time API responses into a clean frontend.</textarea>
+              <textarea id="sub-learned" class="form-textarea" rows="2" placeholder="What did you learn about prompt design and API engineering?"></textarea>
             </div>
 
             <button class="btn btn-emerald btn-lg btn-block" onclick="submitProjectForEvaluation()">
@@ -930,48 +712,11 @@
                 </div>
               </div>
 
-              <!-- 7 Rubric Score Tiles -->
-              <div class="rubric-grid-7">
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">Problem Clarity</div>
-                  <div class="rubric-tile-score" id="score-clarity">90%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">AI Integration</div>
-                  <div class="rubric-tile-score" id="score-ai">85%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">Functionality</div>
-                  <div class="rubric-tile-score" id="score-func">88%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">UX & Polish</div>
-                  <div class="rubric-tile-score" id="score-ux">82%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">Originality</div>
-                  <div class="rubric-tile-score" id="score-orig">84%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">Technical Code</div>
-                  <div class="rubric-tile-score" id="score-tech">89%</div>
-                </div>
-                <div class="rubric-tile">
-                  <div class="rubric-tile-label">Completeness</div>
-                  <div class="rubric-tile-score" id="score-comp">92%</div>
-                </div>
-              </div>
-
               <!-- AI Feedback Details -->
               <div style="background:var(--bg-surface); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
-                <h4 style="font-size:0.95rem; color:var(--emerald-primary); margin-bottom:0.4rem;">AI Rubric Strengths</h4>
+                <h4 style="font-size:0.95rem; color:var(--emerald-primary); margin-bottom:0.4rem;">Evaluation Summary</h4>
                 <p id="eval-strengths" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
-                  Clear problem definition with tangible value for graduating students. Structured JSON output handling is solid.
-                </p>
-
-                <h4 style="font-size:0.95rem; color:var(--amber-primary); margin-bottom:0.4rem;">Recommended Enhancements</h4>
-                <p id="eval-suggestions" style="font-size:0.85rem; color:var(--text-secondary);">
-                  Add streaming token generation (SSE) for perceived latency reduction. Include downloadable PDF summaries.
+                  Your project meets the requirements for a verified build.
                 </p>
               </div>
 
@@ -1195,67 +940,57 @@
           </div>
         </div>
 
-        <!-- 2-Column: A/B Experiments & WhatsApp Broadcast Center -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
-          <!-- A/B Testing Lab -->
+        <!-- Message Studio -->
+        <div style="display:grid; grid-template-columns: 1fr; gap:1.75rem; margin-bottom: 2rem;">
           <div class="milestones-card" style="margin-bottom:0;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3>A/B Testing Experiments</h3>
-              <span class="card-tag" style="background:var(--purple-surface); color:var(--purple-primary);">Growth Optimization</span>
+              <h3>Message Studio</h3>
+              <span class="demo-indicator">AI-Written Tracking</span>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+              Generate AI-written message variants for WhatsApp, Email, or Clubs. Each variant automatically includes tracked links.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label class="form-label">Audience Channel</label>
+                <select id="msg-audience" class="form-select">
+                  <option value="whatsapp">WhatsApp Peer-to-Peer</option>
+                  <option value="email">Email Blast</option>
+                  <option value="club">Club Pitch</option>
+                  <option value="ambassador">Ambassador Recruiting</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Objective / Tone</label>
+                <select id="msg-tone" class="form-select">
+                  <option value="fomo">Urgency (Seats Filling)</option>
+                  <option value="career">Career & Placement Focus</option>
+                  <option value="curiosity">Curiosity & Tech Focus</option>
+                </select>
+              </div>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:1rem;" id="admin-experiments-list">
+            <button class="btn btn-emerald btn-sm" onclick="generateMessageVariants()">
+              <span>✨</span> Generate 3 Variants
+            </button>
+            
+            <div id="message-variants-container" style="margin-top: 1.5rem; display: none;">
               <!-- Dynamically populated via JS -->
             </div>
           </div>
-
-          <!-- Multichannel Message Center -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3>WhatsApp & Message Broadcast Center</h3>
-              <span class="demo-indicator">Simulated Mode</span>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Audience Segment</label>
-              <select id="msg-audience" class="form-select">
-                <option value="all">All 426 Registered Students</option>
-                <option value="unreferred">Students With 0 Referrals (Activate Loop)</option>
-                <option value="high_intent">High Intent Students</option>
-                <option value="amrita">Amrita Vishwa Vidyapeetham Cohort</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Message Template</label>
-              <select id="msg-template-select" class="form-select" onchange="loadMessageTemplate()">
-                <option value="reminder_24h">24-Hour Countdown Reminder</option>
-                <option value="referral_booster">Referral Squad Challenge</option>
-                <option value="final_1h">1-Hour Live Stream Starting</option>
-                <option value="custom">Custom Message</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Message Content</label>
-              <textarea id="msg-body" class="form-textarea" rows="3">Your AI60 workshop starts in 24 hours! Keep your laptop ready. Know a friend who wants to build too? Share your link to unlock starter repos: {{referral_url}}</textarea>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <button class="btn btn-emerald btn-sm" onclick="sendBroadcastMessage()">
-                <span>💬</span> Send Simulated WhatsApp Broadcast
-              </button>
-              <span id="msg-status-text" style="font-size:0.75rem; color:var(--text-muted);">Simulated delivery queue</span>
-            </div>
-          </div>
         </div>
+
+
 
         <!-- Campus Ambassadors Directory -->
         <div class="milestones-card" style="margin-bottom: 2rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
             <div>
-              <h3>College Campus Ambassadors</h3>
-              <p style="font-size:0.82rem;">Student partners driving direct club and hostel community signups</p>
+              <h3>College Clubs & Ambassadors</h3>
+              <p style="font-size:0.82rem;">Tracked links for club partnerships and student ambassadors</p>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="alert('Ambassador registration modal ready')">
               + Add Partner Club
@@ -1322,104 +1057,6 @@
             </table>
           </div>
         </div>
-      </section>
-
-      <!-- ================================================================== -->
-      <!-- VIEW 8: AI HUB (ADMIN INTELLIGENCE CENTER)                         -->
-      <!-- ================================================================== -->
-      <section id="view-ai-hub" class="view-section">
-        <div class="dashboard-head-banner" style="margin-bottom:1.5rem;">
-          <div>
-            <div style="display:flex; align-items:center; gap:0.6rem;">
-              <span class="card-tag" style="background:var(--purple-primary); color:white;">AI OBSERVABILITY</span>
-              <h2 style="font-size: 1.6rem;">AI Command & Control</h2>
-            </div>
-            <p style="font-size: 0.85rem; margin-top: 0.25rem;">
-              Provider Health • Task Routing • Fallback Testing • Knowledge Base
-            </p>
-          </div>
-          <div style="display:flex; gap:0.75rem; align-items:center;">
-            <button class="btn btn-secondary btn-sm" onclick="loadAiHubData()">
-              <span>🔄</span> Refresh Status
-            </button>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
-          
-          <!-- AI Provider Health -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <h3 style="margin-bottom:1rem;">Provider Health</h3>
-            <div id="ai-health-container">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-
-          <!-- Usage & Cost Dashboard -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <h3 style="margin-bottom:1rem;">Usage & Cost Dashboard</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
-              <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Total Requests</div>
-                <div id="ai-total-requests" style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--text-white);">0</div>
-              </div>
-              <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Fallback Rate</div>
-                <div id="ai-fallback-rate" style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--amber-primary);">0%</div>
-              </div>
-              <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Success Rate</div>
-                <div id="ai-success-rate" style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--emerald-primary);">0%</div>
-              </div>
-              <div style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
-                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Est. Cost</div>
-                <div id="ai-est-cost" style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--cyan-primary);">₹0.00</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
-          <!-- Fallback Simulator -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3>Failure & Fallback Simulator</h3>
-              <span class="card-tag" style="background:rgba(245,158,11,0.15); color:var(--amber-primary);">Testing Only</span>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">
-              Simulate provider outages to verify the multi-LLM fallback architecture.
-            </p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.5rem;">
-              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);" onclick="triggerFailureSim('groq')">Simulate Groq Down</button>
-              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);" onclick="triggerFailureSim('openai')">Simulate OpenAI Down</button>
-              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);" onclick="triggerFailureSim('gemini')">Simulate Gemini Down</button>
-              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);" onclick="triggerFailureSim('anthropic')">Simulate Anthropic Down</button>
-            </div>
-            <button class="btn btn-secondary" style="width:100%;" onclick="runSimulationTest()">
-              <span>🚀</span> Run Fallback Test Request
-            </button>
-            <div id="sim-test-result" style="margin-top:1rem; padding:1rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); font-family:var(--font-mono); font-size:0.8rem; color:var(--text-secondary); display:none; white-space:pre-wrap;"></div>
-          </div>
-
-          <!-- Knowledge Base Admin -->
-          <div class="milestones-card" style="margin-bottom:0;">
-            <h3 style="margin-bottom:1rem;">Workshop Knowledge Base (RAG)</h3>
-            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">
-              Manage the facts that ground the AI Workshop Assistant.
-            </p>
-            <div style="display:flex; flex-direction:column; gap:1rem;">
-              <input type="text" class="form-input" id="kb-title" placeholder="Fact Title (e.g., 'Target Audience')">
-              <textarea class="form-input" id="kb-content" rows="3" placeholder="Fact Content..."></textarea>
-              <button class="btn btn-primary" onclick="addKnowledgeFact()">
-                <span>➕</span> Add to Knowledge Base
-              </button>
-            </div>
-            <div style="margin-top:1.5rem; max-height:200px; overflow-y:auto;" id="kb-list-container">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-        </div>
-
       </section>
 
       <!-- ================================================================== -->
