@@ -661,6 +661,10 @@ const mp = document.getElementById('milestone-progress-text');
             badge.textContent = isUnlocked ? 'UNLOCKED' : 'LOCKED';
             badge.className = isUnlocked ? 'card-tag badge-unlocked' : 'card-tag';
           }
+          const pt = card.querySelector('.ms-progress-text');
+          if (pt) {
+            pt.textContent = `${successful} / ${m.threshold}`;
+          }
         });
         updateShareCard('student', successful);
       }
@@ -677,6 +681,14 @@ function copyReferralLink() {
 
 function shareReferralWhatsApp() {
   shareReferral('whatsapp');
+}
+
+function shareReferralLinkedIn() {
+  shareReferral('linkedin');
+}
+
+function shareReferralTelegram() {
+  shareReferral('telegram');
 }
 
 // ============================================================================

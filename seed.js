@@ -280,7 +280,6 @@ async function seed() {
   console.log(`   ${studentCount} student registrations`);
   console.log(`   ${refCreated} referral records`);
   console.log(`   ${ambassadorData.length} ambassadors`);
-  console.log(`   ${experiments.length} experiments`);
   console.log(`   ${projectExamples.length} project submissions`);
   console.log(`   ${messageTemplates.length} message templates`);
   console.log('\n⚠️  All data is DEMO/SIMULATED — not real students.\n');

@@ -568,66 +568,118 @@
             <button class="btn btn-secondary btn-sm" onclick="switchView('workshop')">
               Build Your Project
             </button>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1.75rem; margin-bottom: 2.5rem;">
+            <div style="display:flex; flex-direction:column; gap:1.75rem; margin-bottom: 2.5rem;">
           
-          <div style="display:flex; flex-direction:column; gap:1.75rem;">
-            <!-- B. AI60 JOURNEY -->
-            <div class="milestones-card" style="margin-bottom:0;">
-              <h3 style="margin-bottom:1rem;">Your AI60 Journey</h3>
-              <div style="display:flex; justify-content:space-between; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
-                <div style="color:var(--emerald-primary);">✓<br>Registered</div>
-                <div>→<br>Build Your<br>AI Project</div>
-                <div>→<br>Submit<br>Project</div>
-                <div>→<br>AI<br>Feedback</div>
-                <div>→<br>Share<br>Build Card</div>
-              </div>
-            </div>
-
-            <!-- E. MY PROJECT / NEXT ACTION -->
-            <div class="milestones-card" style="background:var(--card-bg); border:1px solid var(--border-light); margin-bottom:0;">
-              <h3 style="margin-bottom:0.5rem;">Build Your AI Project</h3>
-              <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">Build a project in 60 minutes, submit it, and receive AI-assisted feedback.</p>
-              <button class="btn btn-primary" onclick="switchView('submit')">
-                Build / Submit Project
-              </button>
+          <!-- B. AI60 JOURNEY -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <h3 style="margin-bottom:1rem;">Your AI60 Journey</h3>
+            <div style="display:flex; justify-content:space-between; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
+              <div style="color:var(--emerald-primary);">✓<br>Registered</div>
+              <div>→<br>Build Your<br>AI Project</div>
+              <div>→<br>Submit<br>Project</div>
+              <div>→<br>AI<br>Feedback</div>
+              <div>→<br>Share<br>Build Card</div>
             </div>
           </div>
 
-          <div style="display:flex; flex-direction:column; gap:1.75rem;">
-            <!-- C. REFERRAL SUMMARY -->
-            <div class="referral-box" style="margin-top:0; margin-bottom:0; padding:1.25rem;">
-              <h3 style="font-size:1.1rem; margin-bottom:0.5rem;">Referral Summary</h3>
-              <div style="font-size:0.85rem; margin-bottom:0.5rem;">
-                Successful referrals: <strong id="dash-ref-count">0</strong>
+          <!-- E. MY PROJECT / NEXT ACTION -->
+          <div class="milestones-card" style="background:var(--card-bg); border:1px solid var(--border-light); margin-bottom:0;">
+            <h3 style="margin-bottom:0.5rem;">Build Your AI Project</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">Build a project in 60 minutes, submit it, and receive AI-assisted feedback.</p>
+            <button class="btn btn-primary" onclick="switchView('submit')">
+              Build / Submit Project
+            </button>
+          </div>
+
+          <!-- C. FULL REFERRAL ENGINE -->
+          <div class="referral-box" style="margin-top:0; margin-bottom:0; padding:1.25rem;">
+            <h3 style="font-size:1.1rem; margin-bottom:1rem;">Your Referral Link</h3>
+            
+            <div style="background:var(--bg-black); padding:0.75rem; border-radius:var(--radius-md); font-family:monospace; margin-bottom:1rem; word-break:break-all; font-size:0.9rem;">
+              <span id="student-ref-url-display"></span>
+            </div>
+            
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom: 1.5rem;">
+              <button class="btn btn-emerald btn-sm" onclick="shareReferralWhatsApp()">WhatsApp</button>
+              <button class="btn btn-secondary btn-sm" onclick="shareReferralLinkedIn()">LinkedIn</button>
+              <button class="btn btn-secondary btn-sm" onclick="shareReferralTelegram()">Telegram</button>
+              <button class="btn btn-secondary btn-sm" onclick="copyReferralLink()">Copy Link</button>
+            </div>
+
+            <div style="display:flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Referral Clicks</div>
+                <div style="font-size:1.25rem; font-weight:700;" id="student-invited-count">0</div>
               </div>
-              <div class="share-card-progress" style="margin-top:0.5rem;">
-                <div class="share-card-progress-head">
-                  <span class="share-card-count"><span id="dash-ref-ver">0</span> / <span id="dash-ref-target">3</span> verified referrals</span>
-                </div>
-                <div class="share-card-bar"><div class="share-card-bar-fill" id="dash-ref-bar" style="width:0%;"></div></div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Verified Referrals</div>
+                <div style="font-size:1.25rem; font-weight:700; color:var(--emerald-primary);" id="student-registered-count">0</div>
               </div>
-              <div style="font-size:0.8rem; margin-top:0.5rem; color:var(--text-muted);">
-                Next milestone: <br><strong style="color:var(--cyan-primary);" id="dash-ref-next">3 → Project Starter Pack</strong>
-              </div>
-              
-              <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <button class="btn btn-secondary btn-sm" onclick="copyReferralLink()">Copy Link</button>
-                <button class="btn btn-emerald btn-sm" onclick="shareReferralWhatsApp()">WhatsApp</button>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Conversion Rate</div>
+                <div style="font-size:1.25rem; font-weight:700; color:var(--cyan-primary);" id="student-conv-rate">0%</div>
               </div>
             </div>
 
-            <!-- D. MILESTONE SUMMARY -->
-            <div class="milestones-card" style="margin-bottom:0; padding:1.25rem;">
-              <h4 style="font-size:1rem; margin-bottom:0.25rem;">Proposed campaign incentives</h4>
-              <ul style="font-size:0.8rem; color:var(--text-secondary); margin-left:1.2rem; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.4rem;">
-                <li><strong>3</strong> → Project Starter Pack</li>
-                <li><strong>5</strong> → Premium Project Templates</li>
-                <li><strong>10</strong> → Project Feedback / Review</li>
-                <li><strong>25</strong> → Advanced Project Resource Pack</li>
-              </ul>
+            <h4 style="font-size:1rem; margin-bottom:1rem;">Proposed campaign incentives</h4>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              <div id="ms-card-3" class="milestones-card" style="margin-bottom:0; padding:1rem; border:1px solid var(--border-light); background:var(--card-bg);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                  <div style="font-weight:700;">Project Starter Pack</div>
+                  <span id="ms-badge-3" class="card-tag">LOCKED</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-secondary);"><span class="ms-progress-text" data-threshold="3">0 / 3</span> verified referrals</div>
+              </div>
+              <div id="ms-card-5" class="milestones-card" style="margin-bottom:0; padding:1rem; border:1px solid var(--border-light); background:var(--card-bg);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                  <div style="font-weight:700;">Premium Project Templates</div>
+                  <span id="ms-badge-5" class="card-tag">LOCKED</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-secondary);"><span class="ms-progress-text" data-threshold="5">0 / 5</span> verified referrals</div>
+              </div>
+              <div id="ms-card-10" class="milestones-card" style="margin-bottom:0; padding:1rem; border:1px solid var(--border-light); background:var(--card-bg);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                  <div style="font-weight:700;">Project Feedback / Review</div>
+                  <span id="ms-badge-10" class="card-tag">LOCKED</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-secondary);"><span class="ms-progress-text" data-threshold="10">0 / 10</span> verified referrals</div>
+              </div>
+              <div id="ms-card-25" class="milestones-card" style="margin-bottom:0; padding:1rem; border:1px solid var(--border-light); background:var(--card-bg);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                  <div style="font-weight:700;">Advanced Project Resource Pack</div>
+                  <span id="ms-badge-25" class="card-tag">LOCKED</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-secondary);"><span class="ms-progress-text" data-threshold="25">0 / 25</span> verified referrals</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Student Assistant -->
+          <div class="ai-assistant-wrapper" style="margin-bottom:0; height:auto; min-height:420px; background:var(--card-bg); border-radius:var(--radius-lg); border:1px solid var(--border-light); padding:1.25rem;">
+            <div class="chat-header" style="margin-bottom:1rem;">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div class="demo-pulse"></div>
+                <strong style="font-size:0.9rem; color:var(--text-white);">AI60 Student Assistant</strong>
+              </div>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Grounded Workshop Knowledge</span>
+            </div>
+
+            <div class="quick-prompts-bar" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+              <span class="prompt-pill" style="cursor:pointer; font-size:0.75rem; background:var(--bg-surface); padding:0.25rem 0.5rem; border-radius:var(--radius-md);" onclick="sendQuickPrompt('What is the workshop about?')">Workshop Overview</span>
+              <span class="prompt-pill" style="cursor:pointer; font-size:0.75rem; background:var(--bg-surface); padding:0.25rem 0.5rem; border-radius:var(--radius-md);" onclick="sendQuickPrompt('How does the referral system work?')">Referral Rules</span>
+              <span class="prompt-pill" style="cursor:pointer; font-size:0.75rem; background:var(--bg-surface); padding:0.25rem 0.5rem; border-radius:var(--radius-md);" onclick="sendQuickPrompt('What are the referral milestones?')">Milestones</span>
+              <span class="prompt-pill" style="cursor:pointer; font-size:0.75rem; background:var(--bg-surface); padding:0.25rem 0.5rem; border-radius:var(--radius-md);" onclick="sendQuickPrompt('How do I submit my project?')">Submission Guide</span>
+            </div>
+
+            <div class="chat-messages-scroll" id="chat-messages-box" style="min-height:200px; max-height:300px; overflow-y:auto; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+              <div class="chat-bubble bot" style="background:var(--bg-surface); padding:0.75rem; border-radius:var(--radius-md); font-size:0.85rem; max-width:85%;">
+                Hi! I'm your AI60 Student Assistant. Ask me anything about the workshop format, 60-minute build plan, registration, referral rules, or project submission!
+              </div>
+            </div>
+
+            <div class="chat-input-bar" style="display:flex; gap:0.5rem;">
+              <input type="text" id="chat-input-text" class="form-input" style="flex:1; padding:0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border-light); background:var(--bg-black); color:var(--text-white);" placeholder="Ask about workshop, referrals..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+              <button class="btn btn-primary btn-sm" onclick="sendChatMessage()">Send</button>
             </div>
           </div>
         </div>
