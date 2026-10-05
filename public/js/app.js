@@ -343,7 +343,7 @@ function getQuizTrack() {
   const beginner = STATE.quizAnswers[0] === 0 || STATE.quizAnswers[4] === 2;
   const guide = beginner ? ' Guided, step-by-step build.' : ' Includes room to go deeper.';
   if (branchIdx === 0) {
-    return { name: 'AI Resume Feedback Assistant', desc: 'Track: AI App Developer \u2014 build an LLM-powered web app that analyses resume text.' + guide };
+    return { name: 'AI Career Path Analyzer', desc: 'Track: AI App Developer \u2014 build an LLM-powered web app that maps career skills.' + guide };
   }
   if (branchIdx === 1) {
     return { name: 'AI Study & Lab Helper', desc: 'Track: Engineering Productivity \u2014 build an AI helper for notes, lab reports or datasheets.' + guide };
@@ -609,7 +609,44 @@ async function refreshStudentDashboard() {
         const rate = clicks > 0 ? Math.round((successful / clicks) * 100) : 0;
         document.getElementById('student-conv-rate').textContent = clicks > 0 ? `${rate}%` : '0%';
         
-        const mp = document.getElementById('milestone-progress-text');
+        
+        // --- Dashboard UX Additions ---
+        const dCount = document.getElementById('dash-ref-count');
+        if (dCount) dCount.textContent = successful;
+        const dVer = document.getElementById('dash-ref-ver');
+        if (dVer) dVer.textContent = successful;
+        
+        const mlist = window.AI60Milestones ? window.AI60Milestones.REFERRAL_MILESTONES : [
+          { threshold: 3, reward: 'Project Starter Pack' },
+          { threshold: 5, reward: 'Premium Project Templates' },
+          { threshold: 10, reward: 'Project Feedback / Review' },
+          { threshold: 25, reward: 'Advanced Project Resource Pack' }
+        ];
+        
+        let nextM = mlist.find(m => m.threshold > successful) || mlist[mlist.length - 1];
+        
+        const dTarget = document.getElementById('dash-ref-target');
+        if (dTarget) dTarget.textContent = nextM.threshold;
+        
+        const dBar = document.getElementById('dash-ref-bar');
+        if (dBar) {
+          const pct = Math.min(100, Math.round((successful / nextM.threshold) * 100));
+          dBar.style.width = pct + '%';
+        }
+        
+        const dNext = document.getElementById('dash-ref-next');
+        if (dNext) dNext.textContent = `${nextM.threshold} → ${nextM.reward}`;
+        
+        // Update old view-referrals bar if it still exists (which we removed, but just in case)
+        const oldBar = document.getElementById('student-share-bar');
+        if (oldBar) oldBar.style.width = Math.min(100, Math.round((successful / nextM.threshold) * 100)) + '%';
+        const oldNext = document.getElementById('student-share-next');
+        if (oldNext) oldNext.textContent = `${nextM.threshold} verified referrals`;
+        const oldCount = document.getElementById('student-share-count');
+        if (oldCount) oldCount.textContent = `${successful} / ${nextM.threshold}`;
+        // ------------------------------
+        
+const mp = document.getElementById('milestone-progress-text');
         if (mp) mp.textContent = `${successful} Verified Referrals`;
 
         // Update milestone unlock states (thresholds from shared referral-milestones.js)
@@ -825,6 +862,12 @@ async function submitProjectForEvaluation() {
       document.getElementById('score-orig').textContent = `${ev.originality}%`;
       document.getElementById('score-tech').textContent = `${ev.technical}%`;
       document.getElementById('score-comp').textContent = `${ev.completeness}%`;
+      const titleEl = document.getElementById('eval-status-title');
+      if (titleEl) titleEl.textContent = 'EVALUATED';
+      const descEl = document.getElementById('eval-status-desc');
+      if (descEl) descEl.textContent = 'AI-assisted evaluation based on your submitted project details.';
+      const headerEl = document.getElementById('eval-header-status');
+      if (headerEl) headerEl.textContent = 'Evaluation complete';
       showToast(`Project evaluated. Overall: ${ev.overall_score}/100.`);
     } else {
       showToast('Project submitted! AI-assisted evaluation generated based on project details.');
@@ -1393,8 +1436,8 @@ function showSlide(num) {
     if (el) el.style.display = i === num ? 'block' : 'none';
   }
   document.getElementById('slide-num-badge').textContent = `SLIDE ${num} OF 5`;
-  document.getElementById('deck-prev-btn').disabled = num === 1;
-  document.getElementById('deck-next-btn').disabled = num === 5;
+  document.getElementById('deck-prev-btn').style.visibility = num === 1 ? 'hidden' : 'visible';
+  document.getElementById('deck-next-btn').style.visibility = num === 5 ? 'hidden' : 'visible';
 }
 
 // ============================================================================
@@ -1481,15 +1524,15 @@ function runCampaignSimulation() {
   const baseRefRate = parseFloat(document.getElementById('sim-ref-rate').value) || 0.5;
   const organic = parseFloat(document.getElementById('sim-organic').value) || 30;
 
-  // Additional referral boost from incentive pool (up to +0.8 additional referrals per registrant if full 2k pool allocated)
+  // Additional organic boost from community activation pool (up to +0.8 additional referrals per registrant if full 2k pool allocated)
   const incentiveBoost = (poolBudget / 2000) * 0.8;
   const effectiveRefRate = baseRefRate + incentiveBoost;
 
   const stratLabel = document.getElementById('sim-active-strategy-label');
   if (stratLabel) {
-    if (strategy === 'paid') stratLabel.textContent = 'Strategy 1: 100% Paid Ads';
-    else if (strategy === 'referral') stratLabel.textContent = 'Strategy 2: 100% Referral Pool';
-    else stratLabel.textContent = 'Strategy 3: Hybrid Allocation';
+    if (strategy === 'paid') stratLabel.textContent = 'Strategy 1: 100% Paid Acquisition';
+    else if (strategy === 'referral') stratLabel.textContent = 'Strategy 2: 100% Organic & Campus Community';
+    else stratLabel.textContent = 'Strategy 3: Hybrid Paid + Community';
   }
 
   const scenarios = [

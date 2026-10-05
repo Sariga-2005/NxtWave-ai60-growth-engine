@@ -70,6 +70,13 @@ function adminMiddleware(req, res, next) {
   next();
 }
 
+function studentMiddleware(req, res, next) {
+  if (!req.user || req.user.role !== 'student') {
+    return res.status(403).json({ error: 'Forbidden: Student access required' });
+  }
+  next();
+}
+
 // ============================================================================
 // REFERRAL REDIRECT ROUTES
 // ============================================================================
@@ -314,7 +321,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 // Get current user
-app.get('/api/me', authMiddleware, (req, res) => {
+app.get('/api/me', authMiddleware, studentMiddleware, (req, res) => {
   const user = get('SELECT id, full_name, email, phone, college, branch, graduation_year, referral_code, role, workshop_progress, workshop_status, display_name, intent_level, created_at FROM users WHERE id = ?', [req.user.id]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   
@@ -329,7 +336,7 @@ app.get('/api/me', authMiddleware, (req, res) => {
 // STUDENT DASHBOARD
 // ============================================================================
 
-app.get('/api/student/dashboard', authMiddleware, (req, res) => {
+app.get('/api/student/dashboard', authMiddleware, studentMiddleware, (req, res) => {
   try {
     const user = get('SELECT * FROM users WHERE id = ?', [req.user.id]);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -410,7 +417,7 @@ app.get('/api/student/dashboard', authMiddleware, (req, res) => {
 // REFERRAL ROUTES
 // ============================================================================
 
-app.get('/api/referral/stats', authMiddleware, (req, res) => {
+app.get('/api/referral/stats', authMiddleware, studentMiddleware, (req, res) => {
   try {
     const stats = get(`
       SELECT 
@@ -460,7 +467,7 @@ app.post('/api/referral/track', (req, res) => {
 
 // ============================================================================
 // ============================================================================
-// LEADERBOARD (Top Verified Referrers)
+// TOP REFERRERS (Internal Analytics Only)
 // ============================================================================
 // ============================================================================
 // AI60 STUDENT ASSISTANT (LIGHTWEIGHT RAG)
@@ -710,11 +717,11 @@ function handleProjectSubmit(req, res) {
   }
 }
 
-app.post('/api/project', authMiddleware, handleProjectSubmit);
-app.post('/api/project/submit', authMiddleware, handleProjectSubmit);
+app.post('/api/project', authMiddleware, studentMiddleware, handleProjectSubmit);
+app.post('/api/project/submit', authMiddleware, studentMiddleware, handleProjectSubmit);
 
 // AI Project Evaluation
-app.post('/api/project/evaluate', authMiddleware, async (req, res) => {
+app.post('/api/project/evaluate', authMiddleware, studentMiddleware, async (req, res) => {
   try {
     const { project_id } = req.body;
     const project = get('SELECT * FROM projects WHERE id = ? AND user_id = ?', [project_id, req.user.id]);
