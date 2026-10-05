@@ -43,10 +43,10 @@
             <button class="nav-tab-btn" data-view="quiz" onclick="switchView('quiz')">Fit Quiz</button>
             <button class="nav-tab-btn auth-required" data-view="student"
               onclick="switchView('student')">Dashboard</button>
-            <button class="nav-tab-btn auth-required" data-view="referrals"
-              onclick="switchView('referrals')">My Referrals</button>
+            <button class="nav-tab-btn auth-required" data-view="workshop" onclick="switchView('workshop')">Workshop
+              Companion</button>
             <button class="nav-tab-btn auth-required" data-view="submit" onclick="switchView('submit')">My
-              Project</button>
+              Projects</button>
           </nav>
 
           <!-- Admin Navigation (Hidden by default) -->
@@ -549,10 +549,6 @@
       <!-- ================================================================== -->
       <!-- VIEW 3: STUDENT HUB & VIRAL REFERRAL LOOP                         -->
       <!-- ================================================================== -->
-      
-      <!-- ================================================================== -->
-      <!-- VIEW 3: STUDENT HUB (DASHBOARD OVERVIEW)                           -->
-      <!-- ================================================================== -->
       <section id="view-student" class="view-section">
         <!-- A. STUDENT STATUS -->
         <div class="dashboard-head-banner" style="margin-bottom: 2rem;">
@@ -637,8 +633,933 @@
         </div>
       </section>
 
+<section id="view-workshop" class="view-section">
+        <div class="dashboard-head-banner" style="margin-bottom: 1.5rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <span class="stream-live-tag" style="position:static;" id="workshop-status-tag">UPCOMING</span>
+              <h2 style="font-size: 1.6rem;">AI60 Workshop Companion</h2>
+            </div>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">
+              "Build Your First AI Project in 60 Minutes" • Free 60-minute live build
+            </p>
+          </div>
+          <div style="display:flex; align-items:center; gap:1rem;">
+            <button class="btn btn-primary btn-sm" onclick="switchView('submit')">
+              Submit My Built Project →
+            </button>
+          </div>
+        </div>
+
+        <div class="workshop-grid">
+          <!-- Video Stream Placeholder -->
+          <div>
+            <div class="stream-player-card">
+              <div class="stream-overlay" style="background: var(--bg-surface);">
+                <div
+                  style="width:70px;height:70px;border-radius:50%;background:rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.1rem;font-weight:700;color:var(--cyan-primary);box-shadow:0 0 25px var(--accent-glow);">
+                  LIVE
+                </div>
+                <h3 style="color:var(--text-white); margin-bottom:0.25rem;">Workshop Session</h3>
+                <p style="font-size:0.85rem; color:var(--text-secondary); max-width:400px; margin:0 auto;">
+                  Session link and schedule will be shared with registered students.
+                </p>
+              </div>
+            </div>
+
+            <!-- Milestone Progress Checklist -->
+            <div class="checklist-card" style="margin-top: 1.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div>
+                  <h4>60-Minute Build Plan</h4>
+                  <p style="font-size:0.8rem; color:var(--text-muted);">Check off each milestone as you code along</p>
+                </div>
+                <div style="font-size:0.9rem; font-weight:700; color:var(--emerald-primary);"
+                  id="workshop-progress-pct">
+                  0% Complete
+                </div>
+              </div>
+
+              <div class="progress-track" style="margin-bottom:1.25rem; height:8px;">
+                <div id="workshop-progress-fill" class="progress-fill" style="width: 0%;"></div>
+              </div>
+
+              <div class="check-item">
+                <input type="checkbox" id="check-1" onchange="updateWorkshopMilestones()">
+                <label for="check-1" class="check-label">
+                  <strong>00–15m:</strong> Set up cloud dev environment & API keys
+                </label>
+              </div>
+
+              <div class="check-item">
+                <input type="checkbox" id="check-2" onchange="updateWorkshopMilestones()">
+                <label for="check-2" class="check-label">
+                  <strong>15–35m:</strong> Write systemic prompts & integrate LLM endpoint
+                </label>
+              </div>
+
+              <div class="check-item">
+                <input type="checkbox" id="check-3" onchange="updateWorkshopMilestones()">
+                <label for="check-3" class="check-label">
+                  <strong>35–50m:</strong> Connect input forms & style output UI components
+                </label>
+              </div>
+
+              <div class="check-item">
+                <input type="checkbox" id="check-4" onchange="updateWorkshopMilestones()">
+                <label for="check-4" class="check-label">
+                  <strong>50–60m:</strong> Push to GitHub & submit your project
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Chat & Resources Sidebar -->
+          <div>
+            <div class="checklist-card">
+              <h4>Workshop Questions</h4>
+              <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.5rem;">
+                Live Q&amp;A is not available in this app. Questions will be handled in the session channel shared with
+                registered students. You can also use the AI60 Workshop Assistant on your dashboard.
+              </p>
+            </div>
+
+            <div class="checklist-card" style="margin-top:1.5rem;">
+              <h4>Next Step</h4>
+              <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.85rem;">
+                <a href="#submit" class="btn btn-emerald btn-sm btn-block" onclick="switchView('submit')">
+                  Go to Project Submission
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- ================================================================== -->
+      <!-- VIEW 5: PROJECT SUBMISSION & AUTOMATED AI EVALUATION               -->
+      <!-- ================================================================== -->
+      <section id="view-submit" class="view-section">
+        <div class="section-head" style="margin-bottom: 2rem;">
+          <div class="section-subtitle">Project Submission</div>
+          <h2>Submit Your Project</h2>
+          <p>Share your repository and demo link for automated evaluation & Build Challenge consideration.</p>
+          <div style="margin-top:0.75rem; font-size:0.85rem; color:var(--emerald-primary); font-weight:700; background:var(--emerald-surface); display:inline-block; padding:0.35rem 1rem; border-radius:var(--radius-full);">
+            🏆 Proposed Build Challenge Top-Project Prize: ₹1,000 (Evaluated on Merit & Performance)
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+          <!-- Submission Form -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <h3 style="margin-bottom:1.25rem;">Project Submission Details</h3>
+
+            <div class="form-group">
+              <label class="form-label">Project Title *</label>
+              <input type="text" id="sub-title" class="form-input" value=""
+                placeholder="e.g. AI Resume Feedback Engine">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Problem Addressed *</label>
+              <textarea id="sub-desc" class="form-textarea" rows="2"
+                placeholder="What student or industry problem does your AI app solve?"></textarea>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">GitHub Repository URL *</label>
+                <input type="url" id="sub-github" class="form-input" value="" placeholder="https://github.com/...">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Live Demo / Preview URL</label>
+                <input type="url" id="sub-demo" class="form-input" value="" placeholder="https://...">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Technology Stack *</label>
+              <input type="text" id="sub-stack" class="form-input" value=""
+                placeholder="e.g. Python, Flask, Gemini API">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">What Does the AI Actually Do? *</label>
+              <textarea id="sub-ai-usage" class="form-textarea" rows="2"
+                placeholder="Explain the exact prompt flow and model orchestration."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Key Learnings in 60 Minutes *</label>
+              <textarea id="sub-learned" class="form-textarea" rows="2"
+                placeholder="What did you learn about prompt design and API engineering?"></textarea>
+            </div>
+
+            <button class="btn btn-emerald btn-lg btn-block" onclick="submitProjectForEvaluation()">
+              Submit Project
+            </button>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:0.6rem;">
+              Submission only • automated evaluation coming later
+            </div>
+          </div>
+
+          <!-- Evaluation Scorecard & Post-Workshop Growth Card -->
+          <div>
+            <div id="eval-result-container" class="eval-result-card" style="margin-top:0;">
+              <div class="scorecard-header">
+                <div>
+                  <span class="card-tag"
+                    style="background:var(--emerald-surface); color:var(--emerald-primary);">PROJECT SUBMITTED</span>
+                  <h3 id="eval-proj-title" style="margin-top:0.4rem;">—</h3>
+                  <div style="font-size:0.8rem; color:var(--text-muted);">Evaluation not yet available</div>
+                </div>
+
+                <div class="overall-score-pill">
+                  <div class="score-giant-badge" id="eval-overall-score">—</div>
+                  <div style="font-size:0.8rem; text-align:left;">
+                    <div style="font-weight:700; color:var(--text-white);">NOT EVALUATED</div>
+                    <div style="color:var(--text-muted); font-weight:600;">Automated evaluation coming later</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 7 Rubric Score Tiles -->
+              <div class="rubric-grid-7">
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">Problem Clarity</div>
+                  <div class="rubric-tile-score" id="score-clarity">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">AI Integration</div>
+                  <div class="rubric-tile-score" id="score-ai">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">Functionality</div>
+                  <div class="rubric-tile-score" id="score-func">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">UX & Polish</div>
+                  <div class="rubric-tile-score" id="score-ux">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">Originality</div>
+                  <div class="rubric-tile-score" id="score-orig">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">Technical Code</div>
+                  <div class="rubric-tile-score" id="score-tech">—</div>
+                </div>
+                <div class="rubric-tile">
+                  <div class="rubric-tile-label">Completeness</div>
+                  <div class="rubric-tile-score" id="score-comp">—</div>
+                </div>
+              </div>
+
+              <!-- AI Feedback Details -->
+              <div
+                style="background:var(--bg-surface); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
+                <h4 style="font-size:0.95rem; color:var(--emerald-primary); margin-bottom:0.4rem;">AI Rubric Strengths
+                </h4>
+                <p id="eval-strengths" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+                  Not yet evaluated.
+                </p>
+
+                <h4 style="font-size:0.95rem; color:var(--amber-primary); margin-bottom:0.4rem;">Recommended
+                  Enhancements</h4>
+                <p id="eval-suggestions" style="font-size:0.85rem; color:var(--text-secondary);">
+                  Not yet evaluated.
+                </p>
+              </div>
+
+              <!-- Post-Workshop Growth Loop Share Trigger -->
+              <div
+                style="background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.15)); border:1px solid var(--border-accent); border-radius:var(--radius-lg); padding:1.25rem; text-align:center;">
+                <h4 style="color:var(--text-white); margin-bottom:0.25rem;">Post-Workshop Growth Loop</h4>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem;">
+                  Share the workshop with peers on WhatsApp & LinkedIn using your referral link.
+                </p>
+                <div style="display:flex; justify-content:center; gap:0.75rem;">
+                  <button class="btn btn-emerald btn-sm" onclick="shareBuildOnWhatsApp()">
+                    Share Badge on WhatsApp
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="copyBuildBadgeLink()">
+                    Copy Certificate Link
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- VIEW: UNIFIED LOGIN                                               -->
+      <!-- ================================================================== -->
+      <section id="view-login" class="view-section">
+        <div class="auth-card"
+          style="max-width:400px; margin:4rem auto; background:var(--bg-surface); padding:2rem; border-radius:var(--radius-lg); border:1px solid var(--border-light); position: relative;">
+          <!-- Close Button -->
+          <button onclick="switchView('landing')"
+            style="position: absolute; top: 1rem; right: 1.2rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.2rem;"
+            aria-label="Close">
+            &times;
+          </button>
+
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <div class="demo-pulse"
+              style="margin: 0 auto 0.5rem; background: var(--cyan-primary); box-shadow: 0 0 10px var(--cyan-primary);">
+            </div>
+            <h2 style="margin-bottom:0.5rem;">Welcome Back</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Sign in to your account</p>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="login-email" class="form-input" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="Students: enter phone number">
+          </div>
+          <div id="login-error" style="color:var(--rose-primary); font-size:0.85rem; margin-bottom:1rem; display:none;">
+          </div>
+          <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="performLogin()">
+            Sign In
+          </button>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- VIEW 6: ADMIN GROWTH OPERATING SYSTEM                             -->
+      <!-- ================================================================== -->
+      <section id="view-admin" class="view-section">
+        <!-- Admin Header Bar -->
+        <div class="dashboard-head-banner" style="margin-bottom:1.5rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <span class="card-tag" style="background:var(--accent-primary); color:white;">AI60 GROWTH OS</span>
+              <span class="card-tag" style="background:rgba(245, 158, 11, 0.15); color:var(--amber-primary); border:1px solid rgba(245, 158, 11, 0.3); font-weight:600;">SIMULATED CAMPAIGN ENVIRONMENT</span>
+              <h2 style="font-size: 1.6rem;">Campaign Command Center</h2>
+            </div>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">
+              Campaign Analytics • Registration Pipeline • Messaging Center
+            </p>
+          </div>
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="generateAiInsights()">
+              Generate AI Insights
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportRegistrationsCsv()">
+              Export Reg
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportReferralsCsv()">
+              Export Ref
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Summary Metric Boxes -->
+        <div class="admin-header-kpis" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+          <div class="admin-kpi-box">
+            <div class="admin-kpi-tag">Registrations</div>
+            <div class="admin-kpi-num"><span id="admin-total-reg">0</span><span
+                style="font-size:1rem; color:var(--text-muted);"> / 500</span></div>
+            <div style="font-size:0.8rem; color:var(--emerald-primary);">Overall Goal: 500</div>
+          </div>
+
+          <div class="admin-kpi-box">
+            <div class="admin-kpi-tag">Referral Contribution Target</div>
+            <div class="admin-kpi-num" style="font-size:1.5rem; color:var(--cyan-primary);"><span
+                id="admin-referral-reg">0</span> <span style="font-size:0.85rem; color:var(--text-muted);">/
+                300–400</span></div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Min 300 • Stretch 400</div>
+          </div>
+
+          <div class="admin-kpi-box">
+            <div class="admin-kpi-tag">Remaining to Min (300)</div>
+            <div class="admin-kpi-num" id="admin-ref-rem-300" style="color:var(--amber-primary)">300</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Referrals needed for min</div>
+          </div>
+
+          <div class="admin-kpi-box">
+            <div class="admin-kpi-tag">Remaining to Stretch (400)</div>
+            <div class="admin-kpi-num" id="admin-ref-rem-400" style="color:#a5b4fc">400</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Referrals needed for stretch</div>
+          </div>
+
+          <div class="admin-kpi-box">
+            <div class="admin-kpi-tag">Referral Conv Rate</div>
+            <div class="admin-kpi-num" id="admin-conv-rate" style="color:var(--emerald-primary)">–</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);"><span id="admin-referral-clicks">0</span> link
+              clicks</div>
+          </div>
+        </div>
+
+        <!-- Full Growth Funnel Visualizer -->
+        <div class="funnel-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div>
+              <h3>Full Acquisition & Engagement Funnel</h3>
+              <p style="font-size:0.82rem;">Step-by-step conversion drop-off across the student journey</p>
+            </div>
+            <span class="card-tag">End-to-End Tracking</span>
+          </div>
+
+          <div class="funnel-steps-row">
+            <div class="funnel-col">
+              <div class="funnel-count" id="funnel-visitors">—</div>
+              <div class="funnel-name">Page Visitors</div>
+              <div class="funnel-rate">Top of Funnel</div>
+            </div>
+            <div style="color:var(--text-muted); font-size:1.2rem;">→</div>
+            <div class="funnel-col">
+              <div class="funnel-count" id="funnel-quiz-start">—</div>
+              <div class="funnel-name">Quiz Started</div>
+              <div class="funnel-rate">Micro-engagement</div>
+            </div>
+            <div style="color:var(--text-muted); font-size:1.2rem;">→</div>
+            <div class="funnel-col">
+              <div class="funnel-count" id="funnel-quiz-done">—</div>
+              <div class="funnel-name">Quiz Completed</div>
+              <div class="funnel-rate">Qualified</div>
+            </div>
+            <div style="color:var(--text-muted); font-size:1.2rem;">→</div>
+            <div class="funnel-col" style="border-color:var(--emerald-primary);">
+              <div class="funnel-count" style="color:var(--emerald-primary)" id="funnel-registered">—</div>
+              <div class="funnel-name">Registered</div>
+              <div class="funnel-rate">Form Submit</div>
+            </div>
+            <div style="color:var(--text-muted); font-size:1.2rem;">→</div>
+            <div class="funnel-col">
+              <div class="funnel-count" style="color:var(--cyan-primary)" id="funnel-referrals">—</div>
+              <div class="funnel-name">Viral Referrals</div>
+              <div class="funnel-rate">Referral-sourced</div>
+            </div>
+            <div style="color:var(--text-muted); font-size:1.2rem;">→</div>
+            <div class="funnel-col">
+              <div class="funnel-count" style="color:#a5b4fc" id="funnel-attendees">—</div>
+              <div class="funnel-name">Workshop Attendees</div>
+              <div class="funnel-rate">Not yet tracked</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column: Channel Attribution & AI Strategic Insights -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
+          <!-- Channel Attribution Breakdown -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3>Channel Attribution & ROI</h3>
+              <span class="card-tag">Measured from tracked data</span>
+            </div>
+
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    <th>Registrations</th>
+                    <th>Spend</th>
+                    <th>Cost / Reg</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-channel-tbody">
+                  <tr>
+                    <td colspan="5" style="color:var(--text-muted);">Loading channel data…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- AI Campaign Copilot & Insights -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <h3>AI Growth Copilot</h3>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-copilot-analyze" onclick="generateAiInsights()">
+                Analyze Campaign
+              </button>
+            </div>
+
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Analyze your current funnel and
+              identify the next highest-impact growth action.</p>
+
+            <!-- Provenance / Data Used -->
+            <div id="ai-provenance-box"
+              style="display:none; background:var(--bg-dark); border:1px solid var(--border-light); padding:0.75rem; border-radius:var(--radius-sm); margin-bottom:1rem; font-size:0.8rem;">
+              <div style="color:var(--text-white); font-weight:600; margin-bottom:0.25rem;" id="ai-provenance-title">
+                Analysis based on live campaign data</div>
+              <div style="color:var(--text-secondary); display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.25rem;">
+                <div>Registrations: <span id="ai-prov-reg" style="color:white;">0</span></div>
+                <div>Landing visits: <span id="ai-prov-visits" style="color:white;">0</span></div>
+                <div>Target: <span id="ai-prov-target" style="color:white;">500</span></div>
+                <div>Referral clicks: <span id="ai-prov-ref-clicks" style="color:white;">0</span></div>
+                <div>Referral conversions: <span id="ai-prov-ref-conv" style="color:white;">0</span></div>
+              </div>
+            </div>
+
+            <!-- Insights Box -->
+            <div id="ai-insights-box" style="display:flex; flex-direction:column; gap:0.85rem; font-size:0.85rem;">
+              <div
+                style="background:var(--bg-surface); border-left:3px solid var(--cyan-primary); padding:0.85rem; border-radius:var(--radius-sm);">
+                <p style="color:var(--text-secondary); font-size:0.8rem;">
+                  Ready to analyze.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================== -->
+        <!-- CAMPAIGN STRATEGY SIMULATOR (MAX ₹2,000 BUDGET)                     -->
+        <!-- ================================================================== -->
+        <div class="milestones-card" style="margin-bottom: 2rem; border-top: 4px solid var(--accent-primary);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div>
+              <h3 style="color:var(--accent-primary); display:flex; align-items:center; gap:0.5rem;">
+                Campaign Strategy Simulator (Max ₹2,000)
+              </h3>
+              <p style="font-size:0.85rem; color:var(--text-muted);">SIMULATED PROJECTION &mdash; Model and compare 3
+                acquisition strategies under configurable assumptions (not guaranteed outcomes).</p>
+            </div>
+            <span class="card-tag" style="background:var(--accent-primary); color:white;">SIMULATION</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 2fr; gap:2rem; margin-bottom:1.5rem;">
+            <!-- Simulation Inputs -->
+            <div
+              style="background:var(--bg-surface); padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-light);">
+              <h4 style="margin-bottom:1rem; border-bottom:1px solid var(--border-light); padding-bottom:0.5rem;">
+                Simulator Assumptions</h4>
+
+              <!-- Strategy Selector -->
+              <div class="form-group">
+                <label>Mode / Strategy Focus</label>
+                <select id="sim-strategy" class="form-select" onchange="runCampaignSimulation()">
+                  <option value="hybrid">Strategy 3: Hybrid (Paid + Referral Pool)</option>
+                  <option value="paid">Strategy 1: 100% Paid Acquisition</option>
+                  <option value="referral">Strategy 2: 100% Referral Incentives (₹2k Pool)</option>
+                </select>
+              </div>
+
+              <!-- Budget Split Controls -->
+              <div class="form-group">
+                <label style="display:flex; justify-content:space-between;">
+                  <span>Paid Ads Budget (₹)</span>
+                  <span id="sim-budget-warning"
+                    style="color:var(--amber-primary); font-size:0.75rem; display:none;">Budget cap ₹2,000
+                    exceeded</span>
+                </label>
+                <input type="number" id="sim-budget" class="form-input" value="1000" min="0" max="2000"
+                  oninput="onSimBudgetChange('paid')">
+              </div>
+
+              <div class="form-group">
+                <label>Referral Incentive Pool (₹)</label>
+                <input type="number" id="sim-ref-pool" class="form-input" value="1000" min="0" max="2000"
+                  oninput="onSimBudgetChange('pool')">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Combined Budget: <strong
+                    id="sim-total-budget-text" style="color:var(--cyan-primary);">₹2,000</strong> / ₹2,000 max</div>
+              </div>
+
+              <div class="form-group">
+                <label>Avg. Cost Per Click (CPC) - Assumption</label>
+                <input type="number" id="sim-cpc" class="form-input" value="5" step="0.5"
+                  oninput="runCampaignSimulation()">
+              </div>
+
+              <div class="form-group">
+                <label>Landing Conv. Rate (%) - Assumption</label>
+                <input type="number" id="sim-conv" class="form-input" value="15" oninput="runCampaignSimulation()">
+              </div>
+
+              <div class="form-group">
+                <label>Referral Multiplier (Refs / Registrant)</label>
+                <input type="number" id="sim-ref-rate" class="form-input" value="0.5" step="0.1"
+                  oninput="runCampaignSimulation()">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Base referral coefficient
+                  per student</div>
+              </div>
+
+              <div class="form-group">
+                <label>Organic Registrations (7 Days)</label>
+                <input type="number" id="sim-organic" class="form-input" value="30" oninput="runCampaignSimulation()">
+              </div>
+            </div>
+
+            <!-- Simulation Scenario Outputs -->
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h4>Active Strategy Projection (7 Days)</h4>
+                <span id="sim-active-strategy-label" class="card-tag"
+                  style="background:var(--emerald-surface); color:var(--emerald-primary);">Hybrid Strategy</span>
+              </div>
+
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
+
+                <!-- Conservative -->
+                <div
+                  style="background:var(--bg-dark); padding:1rem; border-radius:var(--radius-md); border-top:3px solid var(--amber-primary);">
+                  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">
+                    CONSERVATIVE (-20%)</div>
+                  <div style="font-size:2rem; font-weight:700; color:var(--text-white); margin-bottom:0.25rem;"
+                    id="sim-out-cons-total">0</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Total Reg. Projected</div>
+
+                  <div
+                    style="margin-top:1rem; border-top:1px solid var(--border-light); padding-top:0.75rem; font-size:0.8rem; display:flex; flex-direction:column; gap:0.35rem;">
+                    <div style="display:flex; justify-content:space-between;"><span>Direct Reg:</span> <span
+                        id="sim-out-cons-paid">0</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Referral Reg:</span> <span
+                        id="sim-out-cons-ref">0</span></div>
+                    <div style="display:flex; justify-content:space-between; color:var(--cyan-primary);">
+                      <span>Cost/Reg:</span> <span id="sim-out-cons-cpa">₹0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Base -->
+                <div
+                  style="background:var(--bg-dark); padding:1rem; border-radius:var(--radius-md); border-top:3px solid var(--emerald-primary); transform:scale(1.03); box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                  <div style="font-size:0.85rem; color:var(--emerald-primary); margin-bottom:0.5rem; font-weight:600;">
+                    BASE ASSUMPTION</div>
+                  <div style="font-size:2.2rem; font-weight:700; color:var(--text-white); margin-bottom:0.25rem;"
+                    id="sim-out-base-total">0</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Total Reg. Projected</div>
+
+                  <div
+                    style="margin-top:1rem; border-top:1px solid var(--border-light); padding-top:0.75rem; font-size:0.8rem; display:flex; flex-direction:column; gap:0.35rem;">
+                    <div style="display:flex; justify-content:space-between;"><span>Direct Reg:</span> <span
+                        id="sim-out-base-paid">0</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Referral Reg:</span> <span
+                        id="sim-out-base-ref">0</span></div>
+                    <div style="display:flex; justify-content:space-between; color:var(--cyan-primary);">
+                      <span>Cost/Reg:</span> <span id="sim-out-base-cpa">₹0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Optimistic -->
+                <div
+                  style="background:var(--bg-dark); padding:1rem; border-radius:var(--radius-md); border-top:3px solid var(--accent-primary);">
+                  <div style="font-size:0.85rem; color:var(--accent-primary); margin-bottom:0.5rem; font-weight:600;">
+                    OPTIMISTIC (+20%)</div>
+                  <div style="font-size:2rem; font-weight:700; color:var(--text-white); margin-bottom:0.25rem;"
+                    id="sim-out-opt-total">0</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Total Reg. Projected</div>
+
+                  <div
+                    style="margin-top:1rem; border-top:1px solid var(--border-light); padding-top:0.75rem; font-size:0.8rem; display:flex; flex-direction:column; gap:0.35rem;">
+                    <div style="display:flex; justify-content:space-between;"><span>Direct Reg:</span> <span
+                        id="sim-out-opt-paid">0</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Referral Reg:</span> <span
+                        id="sim-out-opt-ref">0</span></div>
+                    <div style="display:flex; justify-content:space-between; color:var(--cyan-primary);">
+                      <span>Cost/Reg:</span> <span id="sim-out-opt-cpa">₹0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gap to Target (Base) -->
+              <div
+                style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-light);">
+                <div>
+                  <div style="font-size:0.85rem; color:var(--text-muted);">Target Registrations</div>
+                  <div style="font-size:1.2rem; font-weight:600;">500</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:0.85rem; color:var(--text-muted);">Projected Gap to 500 (Base Scenario)</div>
+                  <div id="sim-out-gap" style="font-size:1.4rem; font-weight:700; color:var(--amber-primary);">0</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Strategy Comparison Table -->
+          <div
+            style="background:var(--bg-surface); padding:1.25rem; border-radius:var(--radius-md); border:1px solid var(--border-light);">
+            <h4 style="margin-bottom:0.75rem; font-size:0.95rem;">Strategy Comparison Matrix (Base Scenario)</h4>
+            <div class="table-wrapper">
+              <table class="data-table" style="font-size:0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Strategy</th>
+                    <th>Budget Allocation</th>
+                    <th>Direct Reg</th>
+                    <th>Referral Reg</th>
+                    <th>Total Projected</th>
+                    <th>Cost / Reg</th>
+                    <th>Gap to 500</th>
+                  </tr>
+                </thead>
+                <tbody id="sim-strategy-comparison-tbody">
+                  <!-- Dynamically populated via JS -->
+                </tbody>
+              </table>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.75rem; text-align:right;">
+              * Projections are simulated estimates under specified assumptions and are not guaranteed outcomes.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column: A/B Experiments & WhatsApp Broadcast Center -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
+          <!-- A/B Testing Lab -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3>A/B Testing Experiments</h3>
+              <span class="card-tag" style="background:var(--purple-surface); color:var(--purple-primary);">Growth
+                Optimization</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1rem;" id="admin-experiments-list">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Multichannel Message Center -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3>Message Studio</h3>
+              <span class="demo-indicator">Draft only – nothing is sent</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Audience Segment</label>
+              <select id="msg-audience" class="form-select">
+                <option value="all">All Registered Students</option>
+                <option value="unreferred">Students With 0 Referrals (Activate Loop)</option>
+                <option value="high_intent">High Intent Students</option>
+                <option value="amrita">Amrita Vishwa Vidyapeetham Cohort</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message Template</label>
+              <select id="msg-template-select" class="form-select" onchange="loadMessageTemplate()">
+                <option value="reminder_24h">24-Hour Countdown Reminder</option>
+                <option value="referral_booster">Referral Squad Challenge</option>
+                <option value="final_1h">1-Hour Workshop Starting</option>
+                <option value="custom">Custom Message</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message Content</label>
+              <textarea id="msg-body" class="form-textarea"
+                rows="3">Your AI60 workshop starts in 24 hours! Keep your laptop ready. Know a friend who wants to build too? Share your link to unlock starter repos: {{referral_url}}</textarea>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <button class="btn btn-emerald btn-sm" onclick="sendBroadcastMessage()">
+                Save Message Draft
+              </button>
+              <span id="msg-status-text" style="font-size:0.75rem; color:var(--text-muted);">Not sent – draft
+                only</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campus Ambassadors Directory -->
+        <div class="milestones-card" style="margin-bottom: 2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div>
+              <h3>College Campus Ambassadors</h3>
+              <p style="font-size:0.82rem;">Student partners driving direct club and hostel community signups</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="alert('Ambassador registration modal ready')">
+              + Add Partner Club
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Ambassador Name</th>
+                  <th>College & Club</th>
+                  <th>Code</th>
+                  <th>Page Visits</th>
+                  <th>Registrations</th>
+                  <th>Conversion</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="admin-ambassadors-tbody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Live Registrations Data Table -->
+        <div class="milestones-card">
+          <div
+            style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <h3>Student Registrations Directory</h3>
+              <p style="font-size:0.82rem;">Registered students with acquisition attribution</p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <input type="text" id="reg-search-input" class="form-input" style="width:200px; padding:0.4rem 0.75rem;"
+                placeholder="Search name, college..." oninput="filterRegistrationsTable()">
+              <select id="reg-intent-filter" class="form-select" style="width:140px; padding:0.4rem 0.75rem;"
+                onchange="filterRegistrationsTable()">
+                <option value="all">All Intents</option>
+                <option value="high">High Intent</option>
+                <option value="medium">Medium Intent</option>
+                <option value="low">Low Intent</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="exportRegistrationsCsv()">
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrapper" style="max-height:420px; overflow-y:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>College</th>
+                  <th>Branch</th>
+                  <th>Phone</th>
+                  <th>Channel Source</th>
+                  <th>Referral Code</th>
+                  <th>Intent</th>
+                </tr>
+              </thead>
+              <tbody id="admin-registrations-tbody">
+                <!-- Populated via /api/admin/registrations -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- VIEW 8: AI HUB (ADMIN INTELLIGENCE CENTER)                         -->
+      <!-- ================================================================== -->
+      <section id="view-ai-hub" class="view-section">
+        <div class="dashboard-head-banner" style="margin-bottom:1.5rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <span class="card-tag" style="background:var(--purple-primary); color:white;">AI OBSERVABILITY</span>
+              <h2 style="font-size: 1.6rem;">AI Command & Control</h2>
+            </div>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">
+              Provider Health • Task Routing • Fallback Testing • Knowledge Base
+            </p>
+          </div>
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="loadAiHubData()">
+              Refresh Status
+            </button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
+
+          <!-- AI Provider Health -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <h3 style="margin-bottom:1rem;">Provider Health</h3>
+            <div id="ai-health-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Usage & Cost Dashboard -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <h3 style="margin-bottom:1rem;">Usage & Cost Dashboard</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+              <div
+                style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Total Requests</div>
+                <div id="ai-total-requests"
+                  style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--text-white);">0
+                </div>
+              </div>
+              <div
+                style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Fallback Rate</div>
+                <div id="ai-fallback-rate"
+                  style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--amber-primary);">
+                  0%</div>
+              </div>
+              <div
+                style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Success Rate</div>
+                <div id="ai-success-rate"
+                  style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--emerald-primary);">
+                  0%</div>
+              </div>
+              <div
+                style="background:var(--bg-primary); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Est. Cost</div>
+                <div id="ai-est-cost"
+                  style="font-size:1.8rem; font-family:var(--font-display); font-weight:700; color:var(--cyan-primary);">
+                  ₹0.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.75rem; margin-bottom: 2rem;">
+          <!-- Fallback Simulator -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3>Failure & Fallback Simulator</h3>
+              <span class="card-tag" style="background:rgba(245,158,11,0.15); color:var(--amber-primary);">Testing
+                Only</span>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+              Simulate provider outages to verify the multi-LLM fallback architecture.
+            </p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.5rem;">
+              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);"
+                onclick="triggerFailureSim('groq')">Simulate Groq Down</button>
+              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);"
+                onclick="triggerFailureSim('openai')">Simulate OpenAI Down</button>
+              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);"
+                onclick="triggerFailureSim('gemini')">Simulate Gemini Down</button>
+              <button class="btn btn-outline" style="border-color:var(--amber-primary); color:var(--amber-primary);"
+                onclick="triggerFailureSim('anthropic')">Simulate Anthropic Down</button>
+            </div>
+            <button class="btn btn-secondary" style="width:100%;" onclick="runSimulationTest()">
+              Run Fallback Test Request
+            </button>
+            <div id="sim-test-result"
+              style="margin-top:1rem; padding:1rem; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-light); font-family:var(--font-mono); font-size:0.8rem; color:var(--text-secondary); display:none; white-space:pre-wrap;">
+            </div>
+          </div>
+
+          <!-- Knowledge Base Admin -->
+          <div class="milestones-card" style="margin-bottom:0;">
+            <h3 style="margin-bottom:1rem;">Workshop Knowledge Base (RAG)</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+              Manage the facts that ground the AI Workshop Assistant.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:1rem;">
+              <input type="text" class="form-input" id="kb-title" placeholder="Fact Title (e.g., 'Target Audience')">
+              <textarea class="form-input" id="kb-content" rows="3" placeholder="Fact Content..."></textarea>
+              <button class="btn btn-primary" onclick="addKnowledgeFact()">
+                Add to Knowledge Base
+              </button>
+            </div>
+            <div style="margin-top:1.5rem; max-height:200px; overflow-y:auto;" id="kb-list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+
       <!-- ================================================================== -->
       <!-- VIEW 7: 5-SLIDE GROWTH STRATEGY PRESENTATION                       -->
       <!-- ================================================================== -->
@@ -801,7 +1722,7 @@
               </div>
               <div class="step-node">
                 <div class="step-title">AI Assistant</div>
-                <div class="step-desc">Pre-workshop chat helper grounded in approved knowledge.</div>
+                <div class="step-desc">Pre-workshop chat helper grounded in approved workshop knowledge.</div>
               </div>
               <div class="step-node">
                 <div class="step-title">Workshop Companion</div>
