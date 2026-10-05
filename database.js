@@ -6,7 +6,11 @@ const initSqlJs = require('sql.js');
 const fs = require('fs');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, 'data', 'ai60.db');
+// AI60_DB_PATH is an optional override used only by isolated test scripts
+// (e.g. test_referrals.js) so test data never touches the real database.
+const DB_PATH = process.env.AI60_DB_PATH
+  ? path.resolve(process.env.AI60_DB_PATH)
+  : path.join(__dirname, 'data', 'ai60.db');
 let db = null;
 
 async function getDb() {
@@ -294,6 +298,18 @@ function initSchema(database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
+
+  database.run(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      token_hash TEXT UNIQUE NOT NULL,
+      user_id TEXT NOT NULL,
+      user_type TEXT NOT NULL CHECK(user_type IN ('ADMIN', 'STUDENT')),
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
 
   // Create indexes
   database.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);

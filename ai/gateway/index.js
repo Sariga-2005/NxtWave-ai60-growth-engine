@@ -75,6 +75,7 @@ class AIGateway {
 
         return result;
       } catch (error) {
+        console.error(`[AI Gateway Debug] ${providerName} failed:`, error.message);
         lastError = error;
         const latency = Date.now() - startTime;
         this.logUsage({

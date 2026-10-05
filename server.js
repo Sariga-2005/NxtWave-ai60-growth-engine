@@ -28,8 +28,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple session/token management
-const sessions = new Map();
+// Persistent session management
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 function generateId() {
   return crypto.randomUUID();
@@ -44,20 +46,24 @@ function generateReferralCode() {
 
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !sessions.has(token)) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  req.user = sessions.get(token);
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  const thash = hashToken(token);
+  const session = get("SELECT * FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')", [thash]);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  const user = get("SELECT * FROM users WHERE id = ?", [session.user_id]);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  req.user = user;
   next();
 }
 
 function adminMiddleware(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !sessions.has(token)) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const user = sessions.get(token);
-  if (user.role !== 'admin') {
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  const thash = hashToken(token);
+  const session = get("SELECT * FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')", [thash]);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  const user = get("SELECT * FROM users WHERE id = ?", [session.user_id]);
+  if (!user || user.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden: Admin access required' });
   }
   req.user = user;
@@ -68,13 +74,13 @@ function adminMiddleware(req, res, next) {
 // REFERRAL REDIRECT ROUTES
 // ============================================================================
 app.get('/r/:code', (req, res) => {
-  const code = req.params.code;
+  const code = String(req.params.code || '').trim().toUpperCase();
   if (code) {
     run(`INSERT INTO analytics_events (id, event_name, source, metadata, created_at) VALUES (?, 'referral_click', 'referral', ?, datetime('now'))`,
         [generateId(), JSON.stringify({ referral_code: code })]);
     saveDb();
   }
-  res.redirect(`/?r=${code}`);
+  res.redirect(`/?r=${encodeURIComponent(code)}`);
 });
 
 app.get('/referral', (req, res) => {
@@ -149,8 +155,9 @@ app.post('/api/register', async (req, res) => {
     let referredBy = null;
     let utmSourceFinal = utm_source || 'direct';
     
-    if (referrerCode) {
-      const referrer = get('SELECT id, email FROM users WHERE referral_code = ?', [referrerCode]);
+    const normalizedReferrerCode = referrerCode ? String(referrerCode).trim().toUpperCase() : '';
+    if (normalizedReferrerCode) {
+      const referrer = get('SELECT id, email FROM users WHERE referral_code = ?', [normalizedReferrerCode]);
       if (referrer && referrer.id !== userId) {
         referredBy = referrer.id;
         utmSourceFinal = utm_source || 'referral';
@@ -198,7 +205,9 @@ app.post('/api/register', async (req, res) => {
 
     // Create session token
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, { id: userId, email: email.toLowerCase(), role: 'student', full_name });
+    const thash = hashToken(token);
+    run(`INSERT INTO sessions (id, token_hash, user_id, user_type, expires_at) VALUES (?, ?, ?, 'STUDENT', datetime('now', '+7 days'))`, 
+      [generateId(), thash, userId]);
 
     saveDb();
 
@@ -239,7 +248,10 @@ app.post('/api/login', async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, { id: user.id, email: user.email, role: user.role, full_name: user.full_name });
+    const thash = hashToken(token);
+    run(`INSERT INTO sessions (id, token_hash, user_id, user_type, expires_at) VALUES (?, ?, ?, 'STUDENT', datetime('now', '+7 days'))`, 
+      [generateId(), thash, user.id]);
+    saveDb();
 
     res.json({
       success: true,
@@ -274,7 +286,9 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, { id: user.id, email: user.email, role: 'admin', full_name: user.full_name });
+    const thash = hashToken(token);
+    run(`INSERT INTO sessions (id, token_hash, user_id, user_type, expires_at) VALUES (?, ?, ?, 'ADMIN', datetime('now', '+7 days'))`, 
+      [generateId(), thash, user.id]);
 
     run(`INSERT INTO audit_log (id, actor_id, action, details, created_at) 
          VALUES (?, ?, 'admin_login', ?, datetime('now'))`,
@@ -291,7 +305,11 @@ app.post('/api/admin/login', async (req, res) => {
 // Logout
 app.post('/api/logout', (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (token) sessions.delete(token);
+  if (token) {
+    const thash = hashToken(token);
+    run("DELETE FROM sessions WHERE token_hash = ?", [thash]);
+    saveDb();
+  }
   res.json({ success: true });
 });
 
@@ -613,11 +631,12 @@ STRICT INSTRUCTIONS:
     const result = await aiGateway.executeTask('workshop_chat', fullPrompt);
 
     if (result.provider === 'DEMO') {
+      const topMatch = scoredFacts.length > 0 && scoredFacts[0].score > 0 ? scoredFacts[0].fact : allKnowledge[0];
       return res.json({
-        response: "AI Assistant is currently unavailable.",
-        provenance: 'System Notice',
-        sources: [],
-        status: 'unavailable'
+        response: topMatch ? topMatch.content : "The AI60 Workshop is a free 60-minute sprint to build your first AI project without months of theory.",
+        provenance: 'AI60 Knowledge Base (Grounded)',
+        sources: topMatch ? [topMatch.title] : ['Workshop Overview'],
+        status: 'grounded_local'
       });
     }
 
@@ -1180,6 +1199,9 @@ app.post('/api/admin/growth-copilot', adminMiddleware, async (req, res) => {
       GROUP BY utm_source ORDER BY count DESC
     `);
     
+    const landingVisits = get(`SELECT COUNT(*) as count FROM analytics_events WHERE event_name IN ('landing_view', 'page_view')`)?.count || 0;
+    const topColleges = all(`SELECT college, COUNT(*) as count FROM users WHERE role = 'student' GROUP BY college ORDER BY count DESC LIMIT 5`);
+    
     const simulator = req.body.simulator || null;
 
     const metricsPayload = {
@@ -1187,12 +1209,15 @@ app.post('/api/admin/growth-copilot', adminMiddleware, async (req, res) => {
       registrations: totalReg,
       registrations_today: todayReg,
       remaining,
+      landing_visits: landingVisits,
       referral_clicks: referralClicks,
       successful_referrals: successfulReferrals,
       referral_conversion_rate: referralConversionRate,
+      quiz_starts: quizStarted,
       quiz_completions: quizCompleted,
       registration_completion_rate: regCompletionRate,
       channels,
+      top_colleges: topColleges,
       simulator
     };
 
@@ -1230,6 +1255,7 @@ INSTRUCTIONS:
       generated_at: new Date().toISOString(),
       metrics: {
         registrations: totalReg,
+        landing_visits: landingVisits,
         referral_clicks: referralClicks,
         referral_conversions: successfulReferrals,
         target: target
@@ -1524,6 +1550,14 @@ async function start() {
   try {
     await getDb();
     console.log('📦 Database initialized');
+    
+    // Clean expired sessions
+    try {
+      run("DELETE FROM sessions WHERE expires_at <= datetime('now')");
+      saveDb();
+    } catch (e) {
+      console.error('Session cleanup error:', e);
+    }
     
     // Create default admin if none exists
     const adminExists = get('SELECT id FROM users WHERE role = ?', ['admin']);

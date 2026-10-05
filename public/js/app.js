@@ -433,6 +433,9 @@ async function handleRegistrationSubmit(event) {
       localStorage.setItem('ai60_user_token', data.token);
     }
     localStorage.setItem('ai60_user', JSON.stringify(data.user));
+    // Referral attribution is complete; clear the stored code so a later
+    // registration on this same device is not attributed to the same referrer.
+    localStorage.removeItem('ai60_ref');
     updateAuthUI();
 
     // Close register modal, open success celebration modal
@@ -454,29 +457,125 @@ function updateSeatDisplays() {
 
 function openSuccessModal(user) {
   const modal = document.getElementById('modal-success');
-  const refUrl = `${window.location.origin}/r/${user.referral_code}`;
-  document.getElementById('success-ref-url').textContent = refUrl;
+  document.getElementById('success-ref-url').textContent = getMyReferralUrl(user) || 'Referral link unavailable';
+  updateShareCard('success', null); // placeholder until real count loads
   modal.classList.add('open');
-}
-
-function copySuccessLink() {
-  const url = document.getElementById('success-ref-url').textContent;
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('Referral link copied to clipboard!');
+  fetchVerifiedReferralCount().then(count => {
+    if (count !== null) updateShareCard('success', count);
   });
 }
 
+function copySuccessLink() {
+  copyShareLink('success-ref-url', 'success-copy-btn');
+}
+
 function shareSuccessWhatsApp() {
-  const code = STATE.currentUser?.referral_code || '';
-  const url = `${window.location.origin}/r/${code}`;
-  const text = encodeURIComponent(`I'm joining NxtWave's free AI project workshop. You can register here: ${url}`);
-  window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  shareReferral('whatsapp');
 }
 
 function closeSuccessAndGoToStudent() {
   document.getElementById('modal-success').classList.remove('open');
   updateStudentViewWithUser(STATE.currentUser);
   switchView('student');
+}
+
+// ============================================================================
+// REFERRAL SHARE CARD ("Build Your AI Squad")
+// Share actions only open the platform's share dialog — nothing is sent
+// automatically. The URL contains only the public referral code.
+// ============================================================================
+const SHARE_MESSAGE = "I'm joining NxtWave's Build Your First AI Project in 60 Minutes workshop. Join me:";
+
+function getMyReferralUrl(user = STATE.currentUser) {
+  const code = user?.referral_code;
+  return code ? `${window.location.origin}/r/${encodeURIComponent(code)}` : '';
+}
+
+async function fetchVerifiedReferralCount() {
+  const token = localStorage.getItem('ai60_user_token');
+  if (!token) return null;
+  try {
+    const res = await fetch('/api/student/dashboard', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.referrals?.successful ?? 0;
+  } catch (e) {
+    return null;
+  }
+}
+
+// prefix: 'success' (post-registration modal) or 'student' (dashboard)
+function updateShareCard(prefix, verifiedCount) {
+  const countEl = document.getElementById(`${prefix}-share-count`);
+  const nextEl = document.getElementById(`${prefix}-share-next`);
+  const nextWrap = document.getElementById(`${prefix}-share-next-wrap`);
+  const barEl = document.getElementById(`${prefix}-share-bar`);
+  if (!countEl || !window.AI60Milestones) return;
+  if (verifiedCount === null || verifiedCount === undefined) {
+    countEl.textContent = '\u2013';
+    if (barEl) barEl.style.width = '0%';
+    return;
+  }
+  const p = window.AI60Milestones.getReferralMilestoneProgress(verifiedCount);
+  countEl.textContent = p.label;
+  if (nextWrap && nextEl) {
+    if (p.next) {
+      nextWrap.firstChild.textContent = 'Next milestone: ';
+      nextEl.textContent = p.next.reward;
+    } else {
+      nextWrap.firstChild.textContent = 'All milestones reached ';
+      nextEl.textContent = '\u2713';
+    }
+  }
+  if (barEl) barEl.style.width = `${p.percent}%`;
+}
+
+function copyShareLink(urlElId, btnId) {
+  const url = getMyReferralUrl() || document.getElementById(urlElId)?.textContent || '';
+  if (!url.includes('/r/')) { showToast('Register first to get your referral link.', 'error'); return; }
+  const done = () => {
+    showToast('Referral link copied');
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = 'Copied \u2713';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+    }
+  };
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { showToast('Could not copy. Please copy the link manually.', 'error'); }
+    ta.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+function shareReferral(platform) {
+  const url = getMyReferralUrl();
+  if (!url) { showToast('Register first to get your referral link.', 'error'); return; }
+  const u = encodeURIComponent(url);
+  let shareUrl;
+  if (platform === 'whatsapp') {
+    shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${SHARE_MESSAGE} ${url}`)}`;
+  } else if (platform === 'linkedin') {
+    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;
+  } else if (platform === 'telegram') {
+    shareUrl = `https://t.me/share/url?url=${u}&text=${encodeURIComponent(SHARE_MESSAGE)}`;
+  } else {
+    return;
+  }
+  window.open(shareUrl, '_blank', 'noopener');
 }
 
 // ============================================================================
@@ -514,59 +613,20 @@ async function refreshStudentDashboard() {
         const mp = document.getElementById('milestone-progress-text');
         if (mp) mp.textContent = `${successful} Verified Referrals`;
 
-        // Update milestone unlock states
-        const ms3 = document.getElementById('ms-card-3');
-        const ms5 = document.getElementById('ms-card-5');
-        const ms10 = document.getElementById('ms-card-10');
-        const ms25 = document.getElementById('ms-card-25');
-
-        if (ms3) {
-          if (successful >= 3) {
-            ms3.classList.add('unlocked');
-            document.getElementById('ms-badge-3').textContent = 'UNLOCKED';
-            document.getElementById('ms-badge-3').className = 'card-tag badge-unlocked';
-          } else {
-            ms3.classList.remove('unlocked');
-            document.getElementById('ms-badge-3').textContent = 'LOCKED';
-            document.getElementById('ms-badge-3').className = 'card-tag';
+        // Update milestone unlock states (thresholds from shared referral-milestones.js)
+        const milestones = window.AI60Milestones ? window.AI60Milestones.REFERRAL_MILESTONES : [];
+        milestones.forEach(m => {
+          const card = document.getElementById(`ms-card-${m.threshold}`);
+          if (!card) return;
+          const isUnlocked = successful >= m.threshold;
+          card.classList.toggle('unlocked', isUnlocked);
+          const badge = document.getElementById(`ms-badge-${m.threshold}`);
+          if (badge) {
+            badge.textContent = isUnlocked ? 'UNLOCKED' : 'LOCKED';
+            badge.className = isUnlocked ? 'card-tag badge-unlocked' : 'card-tag';
           }
-        }
-
-        if (ms5) {
-          if (successful >= 5) {
-            ms5.classList.add('unlocked');
-            document.getElementById('ms-badge-5').textContent = 'UNLOCKED';
-            document.getElementById('ms-badge-5').className = 'card-tag badge-unlocked';
-          } else {
-            ms5.classList.remove('unlocked');
-            document.getElementById('ms-badge-5').textContent = 'LOCKED';
-            document.getElementById('ms-badge-5').className = 'card-tag';
-          }
-        }
-
-        if (ms10) {
-          if (successful >= 10) {
-            ms10.classList.add('unlocked');
-            document.getElementById('ms-badge-10').textContent = 'UNLOCKED';
-            document.getElementById('ms-badge-10').className = 'card-tag badge-unlocked';
-          } else {
-            ms10.classList.remove('unlocked');
-            document.getElementById('ms-badge-10').textContent = 'LOCKED';
-            document.getElementById('ms-badge-10').className = 'card-tag';
-          }
-        }
-
-        if (ms25) {
-          if (successful >= 25) {
-            ms25.classList.add('unlocked');
-            document.getElementById('ms-badge-25').textContent = 'UNLOCKED';
-            document.getElementById('ms-badge-25').className = 'card-tag badge-unlocked';
-          } else {
-            ms25.classList.remove('unlocked');
-            document.getElementById('ms-badge-25').textContent = 'LOCKED';
-            document.getElementById('ms-badge-25').className = 'card-tag';
-          }
-        }
+        });
+        updateShareCard('student', successful);
 
         // Update rank position
         const rankEl = document.getElementById('student-rank-position-text');
@@ -589,19 +649,11 @@ async function refreshStudentDashboard() {
 }
 
 function copyReferralLink() {
-  const url = document.getElementById('student-ref-url-display').textContent;
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('Personal referral link copied to clipboard!');
-  });
+  copyShareLink('student-ref-url-display', 'student-copy-btn');
 }
 
 function shareReferralWhatsApp() {
-  const shown = document.getElementById('student-ref-code-display').textContent;
-  const code = STATE.currentUser?.referral_code || (shown && shown !== '\u2014' ? shown : '');
-  if (!code) { showToast('Register first to get your referral link.', 'error'); return; }
-  const url = `${window.location.origin}/r/${code}`;
-  const text = encodeURIComponent(`I'm joining NxtWave's free AI project workshop. You can register here: ${url}`);
-  window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  shareReferral('whatsapp');
 }
 
 // ============================================================================
@@ -1066,20 +1118,25 @@ async function generateAiInsights() {
       if (provBox) {
         provBox.style.display = 'block';
         document.getElementById('ai-prov-reg').textContent = data.metrics.registrations;
+        const visitsEl = document.getElementById('ai-prov-visits');
+        if (visitsEl) visitsEl.textContent = data.metrics.landing_visits || 0;
         document.getElementById('ai-prov-target').textContent = data.metrics.target;
         document.getElementById('ai-prov-ref-clicks').textContent = data.metrics.referral_clicks;
         document.getElementById('ai-prov-ref-conv').textContent = data.metrics.referral_conversions;
         
         if (payload.simulator) {
-          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live campaign data + Simulator projections (assumptions, not measured results)';
+          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live database metrics + Simulator projections (assumptions, not measured results)';
         } else {
-          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live campaign data';
+          document.getElementById('ai-provenance-title').textContent = 'Analysis based on live database metrics';
         }
       }
 
       const ai = data.analysis;
       let html = `<div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); margin-bottom:1rem; border-left:3px solid var(--cyan-primary);">
-        <h4 style="margin-bottom:0.5rem; color:var(--text-white);">Campaign Summary</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <h4 style="color:var(--text-white); margin:0;">Campaign Summary</h4>
+          <span style="font-size:0.7rem; padding:0.15rem 0.5rem; background:rgba(6, 182, 212, 0.12); color:var(--cyan-primary); border-radius:var(--radius-full); font-weight:600;">AI Growth Copilot</span>
+        </div>
         <p style="color:var(--text-secondary); font-size:0.85rem;">${ai.summary || ''}</p>
       </div>`;
       
@@ -1116,10 +1173,12 @@ async function generateAiInsights() {
       }
       
       if (ai.warning) {
-        html += `<div style="background:var(--bg-dark); border-left:3px solid var(--amber-primary); padding:0.75rem; border-radius:var(--radius-sm); font-size:0.8rem;">
+        html += `<div style="background:var(--bg-dark); border-left:3px solid var(--amber-primary); padding:0.75rem; border-radius:var(--radius-sm); font-size:0.8rem; margin-bottom:0.5rem;">
           <strong style="color:var(--amber-primary);">Caveat:</strong> <span style="color:var(--text-secondary);">${ai.warning}</span>
         </div>`;
       }
+
+      html += `<div style="font-size:0.72rem; color:var(--text-muted); text-align:center; margin-top:0.5rem;">AI-generated growth recommendation based on database metrics. Not human-verified; performance is not guaranteed.</div>`;
 
       box.innerHTML = html;
       showToast('AI analysis complete.');

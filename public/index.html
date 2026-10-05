@@ -341,6 +341,57 @@
           </div>
         </section>
 
+        <!-- Referral Milestones Showcase Grid -->
+        <section class="section-padding" style="padding-top: 0;">
+          <div class="container">
+            <div class="section-head">
+              <div class="section-subtitle">Proposed campaign incentives</div>
+              <h2>BUILD YOUR AI SQUAD</h2>
+              <p>Invite friends who want to build their first AI project. These are proposed campaign incentives tied to verified referrals.</p>
+            </div>
+            
+            <div class="cards-grid-4">
+              <div class="project-demo-card">
+                <div class="project-card-header">
+                  <span class="card-tag" style="background:var(--emerald-surface);color:var(--emerald-primary);">3 VERIFIED REFERRALS</span>
+                </div>
+                <h3 class="project-card-title" style="margin-top: 0.5rem;">Project Starter Pack</h3>
+                <p class="project-card-desc">Starter repos & prompt cheat sheets.</p>
+              </div>
+
+              <div class="project-demo-card">
+                <div class="project-card-header">
+                  <span class="card-tag" style="background:var(--cyan-surface);color:var(--cyan-primary);">5 VERIFIED REFERRALS</span>
+                </div>
+                <h3 class="project-card-title" style="margin-top: 0.5rem;">Premium Project Templates</h3>
+                <p class="project-card-desc">Project architecture templates for complex use cases.</p>
+              </div>
+
+              <div class="project-demo-card">
+                <div class="project-card-header">
+                  <span class="card-tag" style="background:var(--indigo-surface);color:var(--indigo-primary);">10 VERIFIED REFERRALS</span>
+                </div>
+                <h3 class="project-card-title" style="margin-top: 0.5rem;">Project Feedback / Review</h3>
+                <p class="project-card-desc">Detailed technical critique on your repository.</p>
+              </div>
+
+              <div class="project-demo-card">
+                <div class="project-card-header">
+                  <span class="card-tag" style="background:var(--violet-surface);color:var(--violet-primary);">25 VERIFIED REFERRALS</span>
+                </div>
+                <h3 class="project-card-title" style="margin-top: 0.5rem;">Top Referrer Recognition</h3>
+                <p class="project-card-desc">Campus growth champion certificate & recognition.</p>
+              </div>
+            </div>
+
+            <div style="text-align:center; margin-top: 2.5rem;">
+              <button class="btn btn-emerald btn-lg" onclick="openRegisterModal()">
+                Register free and get your personal referral link
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- FAQs Accordion -->
         <section class="section-padding"
           style="background: var(--bg-primary); border-top: 1px solid var(--border-light);">
@@ -559,14 +610,24 @@
             </div>
           </div>
 
+          <div class="share-card-progress" style="margin-top:1rem;">
+            <div class="share-card-progress-head">
+              <span class="share-card-count">Build Your AI Squad: <span id="student-share-count">&ndash;</span> verified referrals</span>
+              <span class="share-card-next" id="student-share-next-wrap">Next milestone: <strong id="student-share-next">&ndash;</strong></span>
+            </div>
+            <div class="share-card-bar"><div class="share-card-bar-fill" id="student-share-bar"></div></div>
+          </div>
+
           <div class="referral-url-copy">
             <span class="referral-url-text" id="student-ref-url-display">Loading referral link...</span>
-            <button class="btn btn-secondary btn-sm" onclick="copyReferralLink()">
+            <button class="btn btn-secondary btn-sm" id="student-copy-btn" onclick="copyReferralLink()">
               Copy Link
             </button>
-            <button class="btn btn-emerald btn-sm" onclick="shareReferralWhatsApp()">
-              Share WhatsApp
-            </button>
+          </div>
+          <div class="share-card-actions" style="margin-top:0.75rem;">
+            <button class="share-btn share-btn-whatsapp" id="student-share-whatsapp" onclick="shareReferral('whatsapp')">WhatsApp</button>
+            <button class="share-btn share-btn-linkedin" id="student-share-linkedin" onclick="shareReferral('linkedin')">LinkedIn</button>
+            <button class="share-btn share-btn-telegram" id="student-share-telegram" onclick="shareReferral('telegram')">Telegram</button>
           </div>
         </div>
 
@@ -592,8 +653,7 @@
             <div class="milestone-item" id="ms-card-5">
               <div class="milestone-title">5 Verified Referrals</div>
               <div class="milestone-req">Premium Project Templates</div>
-              <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Production-ready architecture
-                blueprints</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Project architecture templates</div>
             </div>
             <div class="milestone-item" id="ms-card-10">
               <div class="milestone-title">10 Verified Referrals</div>
@@ -1062,8 +1122,9 @@
         <!-- Admin Header Bar -->
         <div class="dashboard-head-banner" style="margin-bottom:1.5rem;">
           <div>
-            <div style="display:flex; align-items:center; gap:0.6rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
               <span class="card-tag" style="background:var(--accent-primary); color:white;">AI60 GROWTH OS</span>
+              <span class="card-tag" style="background:rgba(245, 158, 11, 0.15); color:var(--amber-primary); border:1px solid rgba(245, 158, 11, 0.3); font-weight:600;">SIMULATED CAMPAIGN ENVIRONMENT</span>
               <h2 style="font-size: 1.6rem;">Campaign Command Center</h2>
             </div>
             <p style="font-size: 0.85rem; margin-top: 0.25rem;">
@@ -1217,8 +1278,9 @@
               style="display:none; background:var(--bg-dark); border:1px solid var(--border-light); padding:0.75rem; border-radius:var(--radius-sm); margin-bottom:1rem; font-size:0.8rem;">
               <div style="color:var(--text-white); font-weight:600; margin-bottom:0.25rem;" id="ai-provenance-title">
                 Analysis based on live campaign data</div>
-              <div style="color:var(--text-secondary); display:grid; grid-template-columns:1fr 1fr; gap:0.25rem;">
+              <div style="color:var(--text-secondary); display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.25rem;">
                 <div>Registrations: <span id="ai-prov-reg" style="color:white;">0</span></div>
+                <div>Landing visits: <span id="ai-prov-visits" style="color:white;">0</span></div>
                 <div>Target: <span id="ai-prov-target" style="color:white;">500</span></div>
                 <div>Referral clicks: <span id="ai-prov-ref-clicks" style="color:white;">0</span></div>
                 <div>Referral conversions: <span id="ai-prov-ref-conv" style="color:white;">0</span></div>
@@ -2013,34 +2075,46 @@
     </div>
   </div>
 
-  <!-- Modal 2: Registration Success & Viral Referral Celebration -->
+  <!-- Modal 2: Registration Success & Referral Share Card -->
   <div id="modal-success" class="modal-overlay">
     <div class="modal-box" style="text-align:center;">
       <h2 style="font-size:1.85rem; margin-bottom:0.5rem;">You're Registered!</h2>
-      <p style="font-size:0.9rem; color:var(--text-secondary); max-width:440px; margin:0 auto 1.5rem;">
-        Your registration is confirmed. Invite your friends with your personal referral link.
+      <p style="font-size:0.9rem; color:var(--text-secondary); max-width:440px; margin:0 auto 1.25rem;">
+        Your seat for <strong>Build Your First AI Project in 60 Minutes</strong> is confirmed.
       </p>
 
-      <div class="referral-box">
-        <div style="font-size:0.78rem; font-weight:700; color:var(--cyan-primary); text-transform:uppercase;">
-          Your Personal Viral Referral Link
+      <section class="share-card" id="success-share-card" aria-labelledby="success-share-title">
+        <div class="share-card-eyebrow" id="success-share-title">Build Your AI Squad</div>
+        <p class="share-card-copy">Invite your friends to Build Your First AI Project in 60 Minutes. Your referral link helps us grow the workshop.</p>
+
+        <div class="share-card-progress">
+          <div class="share-card-progress-head">
+            <span class="share-card-count"><span id="success-share-count">&ndash;</span> verified referrals</span>
+            <span class="share-card-next" id="success-share-next-wrap">Next milestone: <strong id="success-share-next">&ndash;</strong></span>
+          </div>
+          <div class="share-card-bar"><div class="share-card-bar-fill" id="success-share-bar"></div></div>
+          <div class="share-card-note">Milestones are proposed campaign incentives and count verified registrations only.</div>
         </div>
+
+        <div class="share-card-label">Your personal referral link</div>
         <div class="referral-url-copy">
           <span class="referral-url-text" id="success-ref-url">Loading referral link...</span>
-          <button class="btn btn-secondary btn-sm" onclick="copySuccessLink()">
-            Copy
+          <button class="btn btn-secondary btn-sm" id="success-copy-btn" onclick="copySuccessLink()">
+            Copy Link
           </button>
         </div>
-      </div>
 
-      <div style="display:flex; flex-direction:column; gap:0.75rem;">
-        <button class="btn btn-emerald btn-lg btn-block" onclick="shareSuccessWhatsApp()">
-          Share Invite to WhatsApp (Pre-Filled)
-        </button>
-        <button class="btn btn-secondary btn-block" onclick="closeSuccessAndGoToStudent()">
-          Enter Student Dashboard & Workshop Hub →
-        </button>
-      </div>
+        <div class="share-card-label">Share with your friends</div>
+        <div class="share-card-actions">
+          <button class="share-btn share-btn-whatsapp" id="success-share-whatsapp" onclick="shareReferral('whatsapp')">WhatsApp</button>
+          <button class="share-btn share-btn-linkedin" id="success-share-linkedin" onclick="shareReferral('linkedin')">LinkedIn</button>
+          <button class="share-btn share-btn-telegram" id="success-share-telegram" onclick="shareReferral('telegram')">Telegram</button>
+        </div>
+      </section>
+
+      <button class="btn btn-secondary btn-block" id="success-go-dashboard-btn" onclick="closeSuccessAndGoToStudent()">
+        Enter Student Dashboard &amp; Workshop Hub →
+      </button>
     </div>
   </div>
 
@@ -2050,6 +2124,7 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Main Client Script -->
+  <script src="js/referral-milestones.js"></script>
   <script src="js/app.js"></script>
 </body>
 
