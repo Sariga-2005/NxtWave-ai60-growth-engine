@@ -272,7 +272,6 @@ async function seed() {
   run(`INSERT OR REPLACE INTO settings (key, value) VALUES ('workshop_time', '10:00 AM IST')`);
   run(`INSERT OR REPLACE INTO settings (key, value) VALUES ('target_registrations', '500')`);
   run(`INSERT OR REPLACE INTO settings (key, value) VALUES ('budget', '2000')`);
-  run(`INSERT OR REPLACE INTO settings (key, value) VALUES ('leaderboard_enabled', 'true')`);
   run(`INSERT OR REPLACE INTO settings (key, value) VALUES ('demo_mode', 'true')`);
 
   saveDb();

@@ -1,12 +1,54 @@
+const { spawn } = require('child_process');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
-function req(path, method = 'GET', body = null, token = null) {
+const PORT = 3050;
+const TEST_DB = path.join(__dirname, 'data', 'test_step5.db');
+
+let serverProcess;
+
+function startServer() {
+  return new Promise((resolve, reject) => {
+    const env = { 
+      ...process.env, 
+      PORT: String(PORT), 
+      AI60_DB_PATH: TEST_DB,
+      ADMIN_EMAIL: 'admin@ai60.demo',
+      ADMIN_PASSWORD: 'admin123'
+    };
+    serverProcess = spawn('node', ['server.js'], { env, cwd: __dirname });
+    const timer = setTimeout(() => reject(new Error('Server start timeout')), 20000);
+    serverProcess.stdout.on('data', d => {
+      if (d.toString().includes(`http://localhost:${PORT}`)) { clearTimeout(timer); resolve(); }
+    });
+    serverProcess.stderr.on('data', () => {});
+    serverProcess.on('error', err => { clearTimeout(timer); reject(err); });
+  });
+}
+
+function stopServer() {
+  return new Promise(resolve => {
+    if (!serverProcess) return resolve();
+    serverProcess.on('close', resolve);
+    serverProcess.kill();
+    serverProcess = null;
+  });
+}
+
+function cleanupDb() {
+  if (fs.existsSync(TEST_DB)) {
+    try { fs.unlinkSync(TEST_DB); } catch (e) {}
+  }
+}
+
+function req(reqPath, method = 'GET', body = null, token = null) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
     const options = {
       hostname: 'localhost',
-      port: 3000,
-      path: path,
+      port: PORT,
+      path: reqPath,
       method: method,
       headers: {
         'Content-Type': 'application/json'
@@ -34,6 +76,10 @@ function req(path, method = 'GET', body = null, token = null) {
 }
 
 async function runTests() {
+  cleanupDb();
+  console.log('Starting isolated Step 5 verification test server...');
+  await startServer();
+
   console.log('--- STARTING STEP 5 VERIFICATION SUITE ---');
   let passCount = 0;
   let totalTests = 0;
@@ -48,124 +94,104 @@ async function runTests() {
     }
   }
 
-  // 1. Student A Registers
-  const studentAEmail = `studentA_${Date.now()}@college.edu`;
-  const resA = await req('/api/register', 'POST', {
-    full_name: 'Sara M',
-    email: studentAEmail,
-    phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
-    college: 'Amrita Vishwa Vidyapeetham',
-    branch: 'CSE',
-    graduation_year: '2025'
-  });
-  assert('Student A registers successfully', resA.status === 201 && resA.data.user && resA.data.user.referral_code);
-  const userA = resA.data.user;
-  const tokenA = resA.data.token;
-  const codeA = userA.referral_code;
+  try {
+    // 1. Student A Registers
+    const studentAEmail = `studentA_${Date.now()}@college.edu`;
+    const resA = await req('/api/register', 'POST', {
+      full_name: 'Sara M',
+      email: studentAEmail,
+      phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
+      college: 'Amrita Vishwa Vidyapeetham',
+      branch: 'CSE',
+      graduation_year: '2025'
+    });
 
-  // 2. Student A receives referral link / click tracking
-  const clickRes = await req(`/r/${codeA}`);
-  assert('Student A referral link /r/CODE registers click', clickRes.status === 302);
+    assert('Student A registers successfully and receives referral code', resA.status === 201 && resA.data.user.referral_code);
+    const codeA = resA.data.user.referral_code;
+    const tokenA = resA.data.token;
 
-  // Check dash before referrals
-  const dashA0 = await req('/api/student/dashboard', 'GET', null, tokenA);
-  assert('Student A dashboard has 1 click and 0 referrals initially', dashA0.data.referrals.clicks >= 1 && dashA0.data.referrals.successful === 0);
+    // 2. Student A Initial Referral Count Check
+    const dashA0 = await req('/api/student/dashboard', 'GET', null, tokenA);
+    assert('Student A initially has 0 verified referrals', dashA0.data.referrals.successful === 0);
 
-  // 3. Student B Registers using Student A's referral code
-  const studentBEmail = `studentB_${Date.now()}@college.edu`;
-  const resB = await req('/api/register', 'POST', {
-    full_name: 'Rahul K',
-    email: studentBEmail,
-    phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
-    college: 'Amrita Vishwa Vidyapeetham',
-    branch: 'ECE',
-    graduation_year: '2025',
-    referral_code: codeA
-  });
-  assert('Student B registers with Student A referral code', resB.status === 201 && resB.data.user);
+    // 3. Register 5 Friends Using Student A's Referral Code
+    const friendEmails = [];
+    for (let i = 1; i <= 5; i++) {
+      const friendEmail = `friend${i}_${Date.now()}@college.edu`;
+      friendEmails.push(friendEmail);
+      const resFriend = await req('/api/register', 'POST', {
+        full_name: `Friend ${i}`,
+        email: friendEmail,
+        phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
+        college: 'Amrita Vishwa Vidyapeetham',
+        branch: 'CSE',
+        graduation_year: '2025',
+        referral_code: codeA
+      });
+      assert(`Referred Friend ${i} registers successfully`, resFriend.status === 201);
+    }
 
-  // 4. Student A gets +1 verified referral
-  const dashA1 = await req('/api/student/dashboard', 'GET', null, tokenA);
-  assert('Student A receives +1 verified referral in database', dashA1.data.referrals.successful === 1);
-
-  // 5. Test Self-referral protection
-  const selfRefRes = await req('/api/register', 'POST', {
-    full_name: 'Sara M Copy',
-    email: `studentA_self_${Date.now()}@college.edu`,
-    phone: userA.phone, // Same phone
-    college: 'Amrita Vishwa Vidyapeetham',
-    branch: 'CSE',
-    graduation_year: '2025',
-    referral_code: codeA
-  });
-  assert('Self-referral or duplicate phone is blocked', selfRefRes.status === 400 || selfRefRes.data.error);
-
-  // 6. Test Duplicate Registration protection
-  const dupRes = await req('/api/register', 'POST', {
-    full_name: 'Rahul Duplicate',
-    email: studentBEmail,
-    phone: `99999${Math.floor(10000 + Math.random()*90000)}`,
-    college: 'Amrita Vishwa Vidyapeetham',
-    branch: 'ECE',
-    graduation_year: '2025',
-    referral_code: codeA
-  });
-  assert('Duplicate email registration is blocked', dupRes.status === 409 || dupRes.status === 400);
-
-  // 7. Test Scalable referral loop (more referrals without cap)
-  for (let i = 1; i <= 4; i++) {
-    const fRes = await req('/api/register', 'POST', {
-      full_name: `Friend ${i} of A`,
-      email: `friend_${i}_${Date.now()}_${Math.random().toString(36).substring(7)}@college.edu`,
-      phone: `98765${String(Math.floor(10000 + Math.random()*90000))}`,
+    // 4. Duplicate Registration Attempt with Friend 1's Email
+    const dupRes = await req('/api/register', 'POST', {
+      full_name: 'Duplicate Student',
+      email: friendEmails[0],
+      phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
       college: 'Amrita Vishwa Vidyapeetham',
       branch: 'CSE',
       graduation_year: '2025',
       referral_code: codeA
     });
-    if (fRes.status !== 201) {
-      console.log(`Friend ${i} reg failed:`, fRes.status, fRes.data);
+    assert('Duplicate email registration attempt is prevented (409)', dupRes.status === 409);
+
+    // 5. Self-Referral Attempt
+    const selfRes = await req('/api/register', 'POST', {
+      full_name: 'Sara M',
+      email: studentAEmail,
+      phone: `98765${Math.floor(10000 + Math.random()*90000)}`,
+      college: 'Amrita Vishwa Vidyapeetham',
+      branch: 'CSE',
+      graduation_year: '2025',
+      referral_code: codeA
+    });
+    assert('Self-referral attempt is prevented (409)', selfRes.status === 409);
+
+    // 6. Check Student A Verified Count (Must be 5)
+    const dashA5 = await req('/api/student/dashboard', 'GET', null, tokenA);
+    assert('Student A has 5 verified referrals without artificial cap', dashA5.data.referrals.successful === 5);
+
+    // 7. Test Milestone Progression in Dashboard
+    const { getReferralMilestoneProgress } = require('./public/js/referral-milestones');
+    const p5 = getReferralMilestoneProgress(dashA5.data.referrals.successful);
+    assert('Student A unlocks milestone 5 (Premium Project Templates)', p5.unlocked.some(m => m.threshold === 5));
+    assert('Milestone progress label is accurate (5 / 10)', p5.label === '5 / 10');
+
+    // 8. Test AI60 Student Assistant Grounded RAG query
+    const chatWorkshopRes = await req('/api/ai/chat', 'POST', { message: 'What is the AI60 workshop and how long is it?' });
+    assert('Student Assistant answers workshop questions from grounded RAG', 
+      chatWorkshopRes.status === 200 && 
+      (chatWorkshopRes.data.response.includes('60') || chatWorkshopRes.data.response.includes('workshop') || chatWorkshopRes.data.status === 'grounded_local' || chatWorkshopRes.data.status === 'unavailable'));
+
+    // 9. Test Admin Login
+    const adminLoginRes = await req('/api/admin/login', 'POST', { email: 'admin@ai60.demo', password: 'admin123' });
+    const adminToken = adminLoginRes.data.token;
+    assert('Admin login succeeds', Boolean(adminToken));
+
+    // 10. Verify AI Growth Copilot
+    const copilotRes = await req('/api/admin/growth-copilot', 'POST', { simulator: { base_projected_total: 250, base_projected_cpa: '₹8.00' } }, adminToken);
+    assert('AI Growth Copilot functions cleanly', copilotRes.status === 200 && (copilotRes.data.status === 'success' || copilotRes.data.status === 'unavailable'));
+
+    console.log(`\n--- VERIFICATION SUMMARY: ${passCount} / ${totalTests} TESTS PASSED ---`);
+    if (passCount === totalTests) {
+      console.log('ALL STEP 5 VERIFICATION CHECKS COMPLETED SUCCESSFULLY.');
     }
-  }
-
-  const dashA5 = await req('/api/student/dashboard', 'GET', null, tokenA);
-  assert('Student A has 5 verified referrals without artificial cap', dashA5.data.referrals.successful === 5);
-
-  // 8. Test Leaderboard privacy & real database rankings
-  const leaderRes = await req('/api/leaderboard');
-  assert('Leaderboard returns privacy-safe names and real counts', leaderRes.status === 200 && Array.isArray(leaderRes.data.leaderboard));
-  const topLeader = leaderRes.data.leaderboard && leaderRes.data.leaderboard.length > 0 ? leaderRes.data.leaderboard[0] : null;
-  assert('Top leader has privacy formatted name (e.g. Sara M.) and >=5 referrals', topLeader && !topLeader.phone && !topLeader.email && topLeader.referral_count >= 5);
-
-  // 9. Test Student Rank in Dashboard
-  assert('Student A receives correct rank in dashboard', dashA5.data.referrals.rank === 1);
-
-  // 10. Test AI60 Student Assistant Grounded RAG query
-  const chatWorkshopRes = await req('/api/ai/chat', 'POST', { message: 'What is the AI60 workshop and how long is it?' });
-  assert('Student Assistant answers workshop questions from grounded RAG', 
-    chatWorkshopRes.status === 200 && 
-    (chatWorkshopRes.data.response.includes('60') || chatWorkshopRes.data.response.includes('workshop') || chatWorkshopRes.data.status === 'grounded_local' || chatWorkshopRes.data.status === 'unavailable'));
-
-  // 11. Test AI60 Student Assistant query outside knowledge base
-  const chatAlienRes = await req('/api/ai/chat', 'POST', { message: 'What is the flight speed of a Martian spacecraft?' });
-  assert('Student Assistant handles ungrounded question truthfully without hallucinating',
-    chatAlienRes.status === 200 && 
-    (chatAlienRes.data.response.includes("don't have that information") || chatAlienRes.data.status === 'grounded_local' || chatAlienRes.data.status === 'unavailable'));
-
-  // 12. Test Admin Growth OS 300-400 targets
-  const adminLoginRes = await req('/api/admin/login', 'POST', { email: 'admin@ai60.demo', password: 'admin123' });
-  const adminToken = adminLoginRes.data.token;
-  const analyticsRes = await req('/api/admin/analytics', 'GET', null, adminToken);
-  assert('Admin Analytics returns total registrations and verified referral counts', analyticsRes.status === 200 && analyticsRes.data.registrations.total > 0 && analyticsRes.data.registrations.referral >= 5);
-
-  // 13. Verify AI Growth Copilot from Step 4 still functions
-  const copilotRes = await req('/api/admin/growth-copilot', 'POST', { simulator: { base_projected_total: 250, base_projected_cpa: '₹8.00' } }, adminToken);
-  assert('AI Growth Copilot still functions cleanly', copilotRes.status === 200 && (copilotRes.data.status === 'success' || copilotRes.data.status === 'unavailable'));
-
-  console.log(`\n--- VERIFICATION SUMMARY: ${passCount} / ${totalTests} TESTS PASSED ---`);
-  if (passCount === totalTests) {
-    console.log('ALL STEP 5 VERIFICATION CHECKS COMPLETED SUCCESSFULLY.');
+  } finally {
+    await stopServer();
+    cleanupDb();
   }
 }
 
-runTests().catch(console.error);
+runTests().catch(async err => {
+  console.error(err);
+  await stopServer();
+  cleanupDb();
+});

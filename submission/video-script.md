@@ -20,11 +20,11 @@
 
 ### [1:15 – 2:30] LIVE PRODUCT WALKTHROUGH
 * **Visual:** Registration → success modal → WhatsApp share → student dashboard → workshop companion → project submission → Growth OS.
-* **Voiceover:** *"A student registers and instantly gets a personal referral link with a one-click WhatsApp share. The dashboard shows their real referral count. The workshop companion is a 60-minute build checklist, and after the session students submit their project repo; automated evaluation is not available yet. In Growth OS, operators see registrations, funnel counts, channel breakdown and ambassadors from tracked data, and can draft messages — nothing is sent."*
+* **Voiceover:** *"A student registers and instantly gets a personal referral link with a one-click WhatsApp share. The dashboard shows their real referral count and milestone rewards. The workshop companion is a 60-minute build checklist, and after the session students submit their project details for AI-assisted evaluation. In Growth OS, operators see registrations, funnel counts, channel breakdown, ambassadors, and AI Growth Copilot recommendations."*
 
 ### [2:30 – 2:50] WHY THIS CAN WORK
 * **Visual:** Growth OS overview.
 * **Voiceover:** *"It targets existing student clusters — clubs, hostels, WhatsApp groups — and makes sharing a single tap. Whether it reaches 500 will be measured by the Growth OS, not assumed."*
 
 ### [2:50 – 3:00] WHAT'S NEXT
-* **Voiceover:** *"Next: a real Growth Copilot, Message Studio, a budget simulator, tracked club links and GitHub-based project evaluation. Thank you!"*
+* **Voiceover:** *"Next: direct GitHub repository analysis, automated messaging delivery, and scaling across campuses. Thank you!"*

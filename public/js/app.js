@@ -61,8 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     STATE.adminToken = storedAdminToken;
   }
 
-  // Load leaderboard
-  await loadLeaderboard();
   if (STATE.adminToken) await loadAdminData();
 
   // Keyboard navigation for strategy deck
@@ -520,10 +518,11 @@ function updateShareCard(prefix, verifiedCount) {
   countEl.textContent = p.label;
   if (nextWrap && nextEl) {
     if (p.next) {
-      nextWrap.firstChild.textContent = 'Next milestone: ';
+      const remaining = p.next.threshold - verifiedCount;
+      nextWrap.firstChild.textContent = `${remaining} more verified referral${remaining === 1 ? '' : 's'} to unlock: `;
       nextEl.textContent = p.next.reward;
     } else {
-      nextWrap.firstChild.textContent = 'All milestones reached ';
+      nextWrap.firstChild.textContent = 'All milestone rewards unlocked ';
       nextEl.textContent = '\u2713';
     }
   }
@@ -627,26 +626,13 @@ async function refreshStudentDashboard() {
           }
         });
         updateShareCard('student', successful);
-
-        // Update rank position
-        const rankEl = document.getElementById('student-rank-position-text');
-        const refCountEl = document.getElementById('student-rank-ref-count');
-        if (refCountEl) refCountEl.textContent = successful;
-        if (rankEl) {
-          if (data.referrals.rank && data.referrals.rank > 0 && successful > 0) {
-            rankEl.textContent = `Rank #${data.referrals.rank}`;
-            rankEl.style.color = 'var(--emerald-primary)';
-          } else {
-            rankEl.textContent = 'Not ranked (0 verified referrals)';
-            rankEl.style.color = 'var(--text-muted)';
-          }
-        }
       }
     }
   } catch (err) {
     console.warn('Student dash fetch error', err);
   }
 }
+
 
 function copyReferralLink() {
   copyShareLink('student-ref-url-display', 'student-copy-btn');
@@ -754,47 +740,6 @@ async function saveProjectIdea() {
   showToast('Project idea saved to your student profile!');
 }
 
-// ============================================================================
-// TOP 3 REFERRAL LEADERBOARD (REAL DATABASE VALUES)
-// ============================================================================
-async function loadLeaderboard() {
-  try {
-    const res = await fetch('/api/leaderboard');
-    if (!res.ok) return;
-    const data = await res.json();
-    const tbody = document.getElementById('student-leaderboard-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const list = data.leaderboard || [];
-
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1.5rem;">No verified referrals yet. Share your referral link to take the lead.</td></tr>';
-      return;
-    }
-
-    list.slice(0, 10).forEach((item, idx) => {
-      const tr = document.createElement('tr');
-      const rankNum = idx + 1;
-      let badgeTag = '<span class="card-tag">Builder</span>';
-      if (rankNum === 1) badgeTag = '<span class="card-tag badge-top3-1">1st Rank (₹1,000 Pool)</span>';
-      else if (rankNum === 2) badgeTag = '<span class="card-tag badge-top3-2">2nd Rank (₹600 Pool)</span>';
-      else if (rankNum === 3) badgeTag = '<span class="card-tag badge-top3-3">3rd Rank (₹400 Pool)</span>';
-
-      tr.innerHTML = `
-        <td><strong style="color:${rankNum <= 3 ? 'var(--cyan-primary)' : 'var(--text-muted)'}">#${rankNum}</strong></td>
-        <td><strong>${escapeHtml(item.full_name || 'Anonymous Student')}</strong></td>
-        <td>${escapeHtml(item.college || '\u2014')}</td>
-        <td>${escapeHtml(item.branch || 'Engineering')}</td>
-        <td><strong style="color:var(--emerald-primary);">${item.referral_count}</strong> Verified</td>
-        <td>${badgeTag}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.warn('Leaderboard error', err);
-  }
-}
 
 // ============================================================================
 // WORKSHOP ROOM
@@ -851,7 +796,7 @@ async function submitProjectForEvaluation() {
 
   try {
     // Submit the project
-    const subRes = await fetch('/api/project/submit', {
+    const subRes = await fetch('/api/project', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ project_name: title, description: desc, github_url: github, tech_stack: stack, ai_usage: document.getElementById('sub-ai-usage').value.trim() || null })
@@ -859,18 +804,20 @@ async function submitProjectForEvaluation() {
     const subData = await subRes.json();
     if (!subRes.ok) throw new Error(subData.error || 'Submission failed');
 
-    // Request evaluation (server returns evaluation: null when no real evaluator is available)
+    const projectId = subData.project_id || subData.project?.id || subData.id;
+
+    // Request evaluation
     const evalRes = await fetch('/api/project/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ project_id: subData.project?.id || subData.id })
+      body: JSON.stringify({ project_id: projectId })
     });
     const evalData = await evalRes.json();
     const ev = evalData.evaluation;
 
     document.getElementById('eval-proj-title').textContent = title;
-    if (ev && typeof ev.score === 'number') {
-      document.getElementById('eval-overall-score').textContent = ev.score;
+    if (ev && typeof ev.overall_score === 'number') {
+      document.getElementById('eval-overall-score').textContent = ev.overall_score;
       document.getElementById('score-clarity').textContent = `${ev.problem_clarity}%`;
       document.getElementById('score-ai').textContent = `${ev.ai_usage_score}%`;
       document.getElementById('score-func').textContent = `${ev.functionality}%`;
@@ -878,9 +825,9 @@ async function submitProjectForEvaluation() {
       document.getElementById('score-orig').textContent = `${ev.originality}%`;
       document.getElementById('score-tech').textContent = `${ev.technical}%`;
       document.getElementById('score-comp').textContent = `${ev.completeness}%`;
-      showToast(`Project evaluated. Overall: ${ev.score}/100.`);
+      showToast(`Project evaluated. Overall: ${ev.overall_score}/100.`);
     } else {
-      showToast('Project submitted. Automated evaluation is not available yet.');
+      showToast('Project submitted! AI-assisted evaluation generated based on project details.');
     }
 
     document.getElementById('eval-result-container').scrollIntoView({ behavior: 'smooth' });
@@ -901,7 +848,7 @@ function shareBuildOnWhatsApp() {
 function copyBuildBadgeLink() {
   const url = `${window.location.origin}/#submit`;
   navigator.clipboard.writeText(url).then(() => {
-    showToast('Referral link copied to clipboard!');
+    showToast('Project submission link copied to clipboard!');
   });
 }
 
@@ -1590,8 +1537,8 @@ function renderStrategyComparisonTable(cpc, convRate, baseRefRate, organic) {
 
   const strategies = [
     { name: 'Strategy 1: 100% Paid Acquisition', paid: 2000, pool: 0, boost: 0 },
-    { name: 'Strategy 2: 100% Referral Pool (₹1k/₹600/₹400)', paid: 0, pool: 2000, boost: 0.8 },
-    { name: 'Strategy 3: Hybrid (₹1,000 Paid + ₹1,000 Pool)', paid: 1000, pool: 1000, boost: 0.4 }
+    { name: 'Strategy 2: 100% Milestone Incentive Pool', paid: 0, pool: 2000, boost: 0.8 },
+    { name: 'Strategy 3: Hybrid (₹1,000 Paid + ₹1,000 Milestone Pool)', paid: 1000, pool: 1000, boost: 0.4 }
   ];
 
   tbody.innerHTML = '';

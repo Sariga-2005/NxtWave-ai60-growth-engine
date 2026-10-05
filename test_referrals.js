@@ -176,8 +176,16 @@ async function run() {
   check('2 → "2 / 3" (nothing unlocked yet)', getReferralMilestoneProgress(2).label === '2 / 3' && getReferralMilestoneProgress(2).unlocked.length === 0);
   check('5 → "5 / 10"', getReferralMilestoneProgress(5).label === '5 / 10');
   check('10 → "10 / 25"', getReferralMilestoneProgress(10).label === '10 / 25');
-  check('25+ → all milestones reached, no cap', getReferralMilestoneProgress(30).allReached && getReferralMilestoneProgress(30).unlocked.length === 4);
   check('Milestone definitions remain 3/5/10/25', REFERRAL_MILESTONES.map(m => m.threshold).join(',') === '3,5,10,25');
+  check('25 verified referrals unlocks Advanced Project Resource Pack',
+    getReferralMilestoneProgress(25).unlocked.some(m => m.threshold === 25 && m.reward === 'Advanced Project Resource Pack'));
+  
+  // Independent milestone qualification (No rank competition)
+  const pA25 = getReferralMilestoneProgress(25);
+  const pB25 = getReferralMilestoneProgress(25);
+  check('Multiple students with 25 referrals both qualify for Advanced Project Resource Pack equally',
+    pA25.unlocked.length === 4 && pB25.unlocked.length === 4);
+
 
   // ------------------------------------------------- Record integrity
   console.log('\n--- Referral record integrity ---');

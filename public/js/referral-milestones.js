@@ -9,7 +9,7 @@
     { threshold: 3, reward: 'Project Starter Pack' },
     { threshold: 5, reward: 'Premium Project Templates' },
     { threshold: 10, reward: 'Project Feedback / Review' },
-    { threshold: 25, reward: 'Top Referrer Recognition' }
+    { threshold: 25, reward: 'Advanced Project Resource Pack' }
   ];
 
   // Given a verified referral count, return progress toward the next milestone.

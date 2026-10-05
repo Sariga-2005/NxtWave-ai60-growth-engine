@@ -40,7 +40,7 @@ Reach, conversion rates and the referral multiplier are **assumptions to be repl
 1. 5-question quiz that recommends a project **track** (no fit score).
 2. Registration with UTM / referral / ambassador attribution and duplicate prevention.
 3. Referral link generation and one-click WhatsApp share.
-4. Student dashboard with real referral counts and a referral leaderboard.
+4. Student dashboard with real referral counts and milestone-based incentive progress.
 5. Workshop companion: 60-minute build checklist (not a live classroom).
 6. Project submission (evaluation not yet available).
 7. Growth OS: registrations, funnel counts, channel breakdown, ambassadors, experiments, CSV export, message drafts (nothing sent).

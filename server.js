@@ -357,30 +357,6 @@ app.get('/api/student/dashboard', authMiddleware, (req, res) => {
       evaluation = get('SELECT * FROM evaluations WHERE project_id = ?', [project.id]);
     }
 
-    // Compute student's current leaderboard rank based on verified referrals
-    const mySuccessful = referralStats?.successful || 0;
-    let rank = null;
-    if (mySuccessful > 0) {
-      const higherCount = get(`
-        SELECT COUNT(DISTINCT u.id) as count
-        FROM users u
-        JOIN referrals r ON u.id = r.referrer_id AND r.status = 'registered'
-        WHERE u.role = 'student'
-        GROUP BY u.id
-        HAVING COUNT(r.id) > ?
-      `, [mySuccessful]);
-      // If there are students with strictly higher verified referrals
-      const totalHigher = all(`
-        SELECT u.id
-        FROM users u
-        JOIN referrals r ON u.id = r.referrer_id AND r.status = 'registered'
-        WHERE u.role = 'student'
-        GROUP BY u.id
-        HAVING COUNT(r.id) > ?
-      `, [mySuccessful])?.length || 0;
-      rank = totalHigher + 1;
-    }
-
     // Compute referral clicks from analytics_events
     const clickEvents = all(`
       SELECT metadata FROM analytics_events 
@@ -414,7 +390,6 @@ app.get('/api/student/dashboard', authMiddleware, (req, res) => {
         clicks: myClicks,
         successful: referralStats?.successful || 0,
         pending: referralStats?.pending || 0,
-        rank: rank,
         conversion_rate: myClicks > 0 
           ? Math.round(((referralStats?.successful || 0) / myClicks) * 100 * 10) / 10 
           : 0,
@@ -429,6 +404,7 @@ app.get('/api/student/dashboard', authMiddleware, (req, res) => {
     res.status(500).json({ error: 'Failed to load dashboard data' });
   }
 });
+
 
 // ============================================================================
 // REFERRAL ROUTES
@@ -486,60 +462,6 @@ app.post('/api/referral/track', (req, res) => {
 // ============================================================================
 // LEADERBOARD (Top Verified Referrers)
 // ============================================================================
-
-app.get('/api/leaderboard', (req, res) => {
-  try {
-    const { type = 'global', college } = req.query;
-    
-    let query = `
-      SELECT u.id, u.display_name, u.full_name, u.college, u.branch,
-        COUNT(r.id) as referral_count,
-        SUM(CASE WHEN r.status = 'registered' THEN 1 ELSE 0 END) as successful_referrals
-      FROM users u
-      LEFT JOIN referrals r ON u.id = r.referrer_id
-      WHERE u.role = 'student'
-    `;
-    const params = [];
-
-    if (type === 'college' && college) {
-      query += ` AND u.college = ?`;
-      params.push(college);
-    }
-
-    query += ` GROUP BY u.id HAVING successful_referrals > 0 ORDER BY successful_referrals DESC, u.created_at ASC LIMIT 50`;
-
-    const leaderboard = all(query, params);
-
-    // Privacy-safe display name formatter (e.g. "Aditi S." or sanitized display_name)
-    const formatPrivacyName = (fullName, dispName) => {
-      if (dispName && dispName !== fullName) return dispName;
-      if (!fullName) return 'Student';
-      const parts = fullName.trim().split(/\s+/);
-      if (parts.length === 1) return parts[0];
-      return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-    };
-
-    res.json({
-      leaderboard: leaderboard.map((entry, i) => {
-        const privName = formatPrivacyName(entry.full_name, entry.display_name);
-        return {
-          rank: i + 1,
-          display_name: privName,
-          full_name: privName, // privacy-safe alias
-          college: entry.college,
-          branch: entry.branch || 'Engineering',
-          referral_count: entry.successful_referrals || 0,
-          successful_referrals: entry.successful_referrals || 0,
-          total_referrals: entry.referral_count || 0
-        };
-      })
-    });
-  } catch (error) {
-    console.error('Leaderboard error:', error);
-    res.status(500).json({ error: 'Failed to load leaderboard' });
-  }
-});
-
 // ============================================================================
 // AI60 STUDENT ASSISTANT (LIGHTWEIGHT RAG)
 // ============================================================================
@@ -755,7 +677,7 @@ app.post('/api/quiz/submit', (req, res) => {
 // PROJECT SUBMISSION
 // ============================================================================
 
-app.post('/api/project', authMiddleware, (req, res) => {
+function handleProjectSubmit(req, res) {
   try {
     const { project_name, description, github_url, demo_url, tech_stack, ai_usage, what_learned } = req.body;
     
@@ -763,7 +685,6 @@ app.post('/api/project', authMiddleware, (req, res) => {
       return res.status(400).json({ error: 'Project name and description are required' });
     }
 
-    // Validate URLs if provided
     if (github_url && !github_url.match(/^https?:\/\//)) {
       return res.status(400).json({ error: 'Please enter a valid GitHub URL' });
     }
@@ -787,7 +708,10 @@ app.post('/api/project', authMiddleware, (req, res) => {
     console.error('Project submission error:', error);
     res.status(500).json({ error: 'Failed to submit project. Please try again.' });
   }
-});
+}
+
+app.post('/api/project', authMiddleware, handleProjectSubmit);
+app.post('/api/project/submit', authMiddleware, handleProjectSubmit);
 
 // AI Project Evaluation
 app.post('/api/project/evaluate', authMiddleware, async (req, res) => {
@@ -1578,8 +1502,8 @@ async function start() {
         { title: 'Workshop Duration & Schedule', category: 'duration', content: 'The workshop lasts exactly 60 minutes. The structured timeline is: 00-10 min: Understand the problem and cloud environment setup; 10-20 min: Systemic prompt engineering and LLM architecture planning; 20-40 min: Building the core AI engine and API integration; 40-50 min: Connecting frontend forms and UI polish; 50-60 min: Live demo, project submission on GitHub, and peer showcase.' },
         { title: 'Registration & Prerequisites', category: 'registration', content: 'Registration is 100% free with no credit card, paywall, or hidden fees required. The only requirements are a laptop with a modern web browser and a stable internet connection. No prior AI or Machine Learning experience is required.' },
         { title: 'Referral System & Rules', category: 'referrals', content: 'Every registered student receives a unique personal viral referral link (format: /r/CODE). A referral is verified only when a friend clicks the link and completes a new, unique registration with a distinct email and phone number. Self-referrals and duplicate registrations are blocked. There is no artificial maximum referral cap (students can refer 3, 5, 10, 25 or more friends).' },
-        { title: 'Referral Milestones (Proposed Incentives)', category: 'milestones', content: 'Proposed campaign milestone incentives designed to maximize viral peer learning squads: 3 verified referrals unlock the Project Starter Pack (starter code repositories); 5 verified referrals unlock Premium Project Templates; 10 verified referrals unlock Project Feedback/Review; 25 verified referrals unlock Top Referrer Recognition. Rewards unlock only when the verified referral threshold is legitimately reached in the database.' },
-        { title: 'Top-3 Referral Competition & Proposed Pool', category: 'competition', content: 'The campaign features a Top 3 Verified Referrers leaderboard based solely on confirmed registrations. The proposed campaign incentive pool models a total of ₹2,000 (suggested split: 1st place ₹1,000, 2nd place ₹600, 3rd place ₹400). This is a simulated campaign incentive design and not a guaranteed payment unless explicitly authorized by challenge rules.' },
+        { title: 'Referral Milestones (Proposed Incentives)', category: 'milestones', content: 'Proposed campaign milestone incentives designed to maximize viral peer learning squads: 3 verified referrals unlock the Project Starter Pack; 5 verified referrals unlock Premium Project Templates; 10 verified referrals unlock Project Feedback/Review; 25 verified referrals unlock the Advanced Project Resource Pack. Every student who reaches a milestone qualifies equally. Referrals are milestone-based, not competitive or rank-based.' },
+        { title: 'Proposed Build Challenge Performance Prize', category: 'competition', content: 'The proposed monetary incentive of ₹1,000 for top project build challenge performance is based on merit and workshop project submission evaluation (functionality, problem clarity, technical implementation, UX, originality), separate from referral count.' },
         { title: 'Project Tracks & Ideas', category: 'projects', content: 'Students can build from curated tracks or custom ideas: 1) AI Resume Critique Engine (Career/HR tech parsing ATS compatibility); 2) Concept Simplifier & Quizzer (EdTech explaining complex CS concepts); 3) Code Bug Explainer & Fixer (Developer tool analyzing stack traces); 4) Smart Campus FAQ Assistant (Campus automation). All are tailored to be completed as a working MVP within 60 minutes.' },
         { title: 'Workshop Companion', category: 'companion', content: 'Registered students gain access to the Workshop Companion dashboard featuring a 4-step live build checklist, stream placeholder, and quick links to project submission.' },
         { title: 'Project Submission & Evaluation', category: 'submission', content: 'After building during the workshop, students submit their project title, problem description, GitHub repository URL, live demo link, and technology stack in the My Projects portal. Automated 7-point rubric evaluation and verified build credentials will be available upon evaluation release.' },

@@ -15,15 +15,15 @@ Discover → Landing → Fit quiz → Register → Refer → Friend registers �
 * **Landing page** with workshop value proposition, timeline, FAQ and registration modal.
 * **5-question quiz** that recommends a project *track* (no fit score).
 * **Registration** with UTM / referral-code / ambassador-code capture and automatic referral-code generation.
-* **Student dashboard**: registration details, personal referral link, real referral counts (from the DB), WhatsApp share, referral leaderboard.
-* **Workshop companion**: 60-minute build checklist (starts unchecked). It is not a live classroom — no live stream, no live Q&A.
-* **Project submission**: stores title, description, repo URL, stack. Automated evaluation is *not available yet*; the UI shows "Not evaluated".
-* **Growth OS (admin)**: registrations, funnel counts from tracked events, channel breakdown from UTM data, referral registrations, ambassadors, experiments list, registrations table + CSV export, and a **message draft** form (nothing is sent).
-* **AI provider abstraction** (`ai/`) kept for later use (Growth Copilot, Message Studio). The AI Hub UI has been removed from navigation.
+* **Student dashboard**: registration details, personal referral link, real referral counts (from the DB), WhatsApp share, milestone-based referral rewards (3, 5, 10, 25 verified referrals).
+* **Workshop companion**: 60-minute build checklist (starts unchecked).
+* **Project submission & evaluation**: stores title, description, repo URL, stack, and provides AI-assisted project evaluation based on submitted project details. (Note: Repository analysis is not currently performed.)
+* **Growth OS (admin)**: registrations, funnel counts from tracked events, channel breakdown from UTM data, referral registrations, ambassadors, experiments list, Growth Copilot AI strategic recommendations, multi-strategy budget simulator, registrations table + CSV export, and a **message draft** form (nothing is sent).
+* **AI provider abstraction** (`ai/`): powers AI Student Assistant RAG, AI Project Evaluation, and Growth Copilot recommendations.
 
 ## Deferred (not implemented yet)
 
-Real Growth Copilot, Message Studio, budget simulator, tracked club links, GitHub-based project evaluation, Build Cards, Postgres, JWT migration, deployment.
+Direct GitHub code repository analysis, Postgres, JWT migration, production deployment.
 
 ## Quick start
 
