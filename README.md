@@ -33,7 +33,7 @@ npm run seed   # optional: synthetic demo data
 npm start
 ```
 
-* App: http://localhost:3000/
+* App: [http://localhost:3000/](https://ai60-growth-engine.onrender.com/
 * Admin (demo credentials created on first run): `admin@ai60.demo` / `admin123` — change before any real deployment.
 
 ## Repository structure
