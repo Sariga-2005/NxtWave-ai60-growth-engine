@@ -37,6 +37,11 @@ function generateId() {
   return crypto.randomUUID();
 }
 
+function normalizePhone(phone) {
+  if (!phone) return '';
+  return String(phone).replace(/[\s\-\+\(\)]/g, '').replace(/^91/, '');
+}
+
 function generateReferralCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -236,28 +241,55 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Login
+// Login (Student and Admin)
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    const { email, phone, identifier, password } = req.body;
+    const rawId = (identifier || email || phone || '').trim();
+    if (!rawId || !password) {
+      return res.status(400).json({ error: 'Email/Phone and password are required' });
     }
 
-    const user = get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+    const cleanPhone = normalizePhone(rawId);
+    let user = null;
+
+    if (rawId.includes('@')) {
+      user = get('SELECT * FROM users WHERE email = ?', [rawId.toLowerCase()]);
+    } else if (cleanPhone && cleanPhone.length === 10) {
+      user = get('SELECT * FROM users WHERE phone = ?', [cleanPhone]);
+    }
+
+    if (!user) {
+      user = get('SELECT * FROM users WHERE email = ? OR phone = ?', [rawId.toLowerCase(), cleanPhone]);
+    }
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const valid = await bcrypt.compare(password, user.password_hash);
+    let valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      const cleanPass = normalizePhone(password);
+      if (cleanPass && cleanPass !== password) {
+        valid = await bcrypt.compare(cleanPass, user.password_hash);
+      }
+    }
+
     if (!valid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    const userType = user.role === 'admin' ? 'ADMIN' : 'STUDENT';
     const token = crypto.randomBytes(32).toString('hex');
     const thash = hashToken(token);
-    run(`INSERT INTO sessions (id, token_hash, user_id, user_type, expires_at) VALUES (?, ?, ?, 'STUDENT', datetime('now', '+7 days'))`, 
-      [generateId(), thash, user.id]);
+    run(`INSERT INTO sessions (id, token_hash, user_id, user_type, expires_at) VALUES (?, ?, ?, ?, datetime('now', '+7 days'))`, 
+      [generateId(), thash, user.id, userType]);
+
+    if (user.role === 'admin') {
+      run(`INSERT INTO audit_log (id, actor_id, action, details, created_at) 
+           VALUES (?, ?, 'admin_login', ?, datetime('now'))`,
+        [generateId(), user.id, JSON.stringify({ ip: req.ip })]);
+    }
     saveDb();
 
     res.json({
@@ -266,6 +298,7 @@ app.post('/api/login', async (req, res) => {
         id: user.id,
         full_name: user.full_name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         referral_code: user.referral_code,
         college: user.college
@@ -282,7 +315,11 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = get('SELECT * FROM users WHERE email = ? AND role = ?', [email.toLowerCase(), 'admin']);
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const user = get('SELECT * FROM users WHERE email = ? AND role = ?', [cleanEmail, 'admin']);
     if (!user) {
       return res.status(401).json({ error: 'Invalid admin credentials' });
     }
@@ -1490,15 +1527,65 @@ async function start() {
       console.error('Session cleanup error:', e);
     }
     
-    // Create default admin if none exists
-    const adminExists = get('SELECT id FROM users WHERE role = ?', ['admin']);
-    if (!adminExists && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+    // Ensure default admin exists and password hash matches configured credentials
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ai60.com').trim().toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    
+    let adminUser = get('SELECT id, password_hash FROM users WHERE email = ?', [adminEmail]);
+    if (!adminUser) {
       const adminId = generateId();
-      const adminHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+      const adminHash = await bcrypt.hash(adminPassword, 10);
       run(`INSERT INTO users (id, email, phone, password_hash, full_name, role, referral_code, display_name, created_at) 
            VALUES (?, ?, ?, ?, ?, 'admin', ?, ?, datetime('now'))`,
-        [adminId, process.env.ADMIN_EMAIL, '0000000000', adminHash, 'Admin User', 'ADMIN00', 'Admin']);
+        [adminId, adminEmail, '0000000000', adminHash, 'Admin User', 'ADMIN00', 'Admin']);
       saveDb();
+      console.log(`👤 Admin user created: ${adminEmail}`);
+    } else {
+      const passwordMatches = await bcrypt.compare(adminPassword, adminUser.password_hash);
+      if (!passwordMatches) {
+        const newHash = await bcrypt.hash(adminPassword, 10);
+        run('UPDATE users SET password_hash = ?, role = ? WHERE id = ?', [newHash, 'admin', adminUser.id]);
+        saveDb();
+        console.log(`🔄 Admin password hash synced for: ${adminEmail}`);
+      }
+    }
+
+    // Ensure Demo Admin exists with dedicated demo credentials
+    const demoAdminEmail = 'demo-admin@ai60.com';
+    const demoAdminPass = 'demo-admin123';
+    let demoAdmin = get('SELECT id, password_hash FROM users WHERE email = ?', [demoAdminEmail]);
+    if (!demoAdmin) {
+      const demoAdminHash = await bcrypt.hash(demoAdminPass, 10);
+      run(`INSERT INTO users (id, email, phone, password_hash, full_name, role, referral_code, display_name, created_at) 
+           VALUES (?, ?, '0000000001', ?, 'AI60 Demo Admin', 'admin', 'DEMOAD', 'AI60 Demo Admin', datetime('now'))`,
+        [generateId(), demoAdminEmail, demoAdminHash]);
+      saveDb();
+    } else {
+      const match = await bcrypt.compare(demoAdminPass, demoAdmin.password_hash);
+      if (!match) {
+        const newHash = await bcrypt.hash(demoAdminPass, 10);
+        run('UPDATE users SET password_hash = ?, role = ? WHERE id = ?', [newHash, 'admin', demoAdmin.id]);
+        saveDb();
+      }
+    }
+
+    // Ensure Demo Student exists with dedicated demo credentials
+    const demoStudentPhone = '9876500060';
+    const demoStudentEmail = 'demo-student@ai60.com';
+    let demoStudent = get('SELECT id, password_hash FROM users WHERE phone = ? OR email = ?', [demoStudentPhone, demoStudentEmail]);
+    if (!demoStudent) {
+      const demoStudentHash = await bcrypt.hash(demoStudentPhone, 10);
+      run(`INSERT INTO users (id, email, phone, password_hash, full_name, role, college, branch, graduation_year, referral_code, display_name, created_at) 
+           VALUES (?, ?, ?, ?, 'AI60 Demo Student', 'student', 'AI60 Demo College', 'Computer Science and Engineering', 2025, 'DEMO60', 'AI60 Demo Student', datetime('now'))`,
+        [generateId(), demoStudentEmail, demoStudentPhone, demoStudentHash]);
+      saveDb();
+    } else {
+      const match = await bcrypt.compare(demoStudentPhone, demoStudent.password_hash);
+      if (!match) {
+        const newHash = await bcrypt.hash(demoStudentPhone, 10);
+        run('UPDATE users SET password_hash = ?, role = ? WHERE id = ?', [newHash, 'student', demoStudent.id]);
+        saveDb();
+      }
     }
 
     // Seed default verified AI60 workshop knowledge base facts if empty

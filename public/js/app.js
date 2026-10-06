@@ -47,11 +47,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (storedUser) {
     try {
       STATE.currentUser = JSON.parse(storedUser);
+      STATE.userToken = localStorage.getItem('ai60_user_token');
       updateAuthUI();
       updateStudentViewWithUser(STATE.currentUser);
     } catch (e) {
       console.warn('Session parse error', e);
       localStorage.removeItem('ai60_user');
+      localStorage.removeItem('ai60_user_token');
     }
   }
 
@@ -177,16 +179,24 @@ function hideAdminNav() {
 }
 
 async function performLogin(email, password) {
-  const e = email || document.getElementById('login-email')?.value;
-  const p = password || document.getElementById('login-password')?.value;
+  const e = (email || document.getElementById('login-email')?.value || '').trim();
+  const p = (password || document.getElementById('login-password')?.value || '').trim();
   const errEl = document.getElementById('login-error');
   if (errEl) errEl.style.display = 'none';
+
+  if (!e || !p) {
+    if (errEl) {
+      errEl.textContent = 'Please enter your email/phone and password.';
+      errEl.style.display = 'block';
+    }
+    return false;
+  }
 
   try {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: e, password: p })
+      body: JSON.stringify({ identifier: e, email: e, phone: e, password: p })
     });
     const data = await res.json();
     
@@ -205,24 +215,43 @@ async function performLogin(email, password) {
         switchView('admin');
         showToast('Admin access granted.');
       } else {
+        updateStudentViewWithUser(data.user);
         switchView('student');
         showToast('Welcome back!');
       }
       return true;
     } else {
       if (errEl) {
-        errEl.textContent = data.error || 'Login failed';
+        errEl.textContent = data.error || 'Invalid email or password.';
         errEl.style.display = 'block';
       }
     }
   } catch (err) {
     if (errEl) {
-      errEl.textContent = 'Network error during login';
+      errEl.textContent = 'Network error during login. Please try again.';
       errEl.style.display = 'block';
     }
     console.error('Login error:', err);
   }
   return false;
+}
+
+function useDemoCredentials(type) {
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  const errEl = document.getElementById('login-error');
+  if (errEl) errEl.style.display = 'none';
+
+  if (type === 'student') {
+    if (emailInput) emailInput.value = '9876500060';
+    if (passwordInput) passwordInput.value = '9876500060';
+    showToast('Demo student credentials populated.');
+  } else if (type === 'admin') {
+    if (emailInput) emailInput.value = 'demo-admin@ai60.com';
+    if (passwordInput) passwordInput.value = 'demo-admin123';
+    showToast('Demo admin credentials populated.');
+  }
+  if (passwordInput) passwordInput.focus();
 }
 
 // ============================================================================
@@ -586,13 +615,23 @@ function shareReferral(platform) {
 // ============================================================================
 function updateStudentViewWithUser(user) {
   if (!user) return;
-  document.getElementById('student-name-display').textContent = user.full_name;
-  document.getElementById('student-avatar-letter').textContent = user.full_name.charAt(0).toUpperCase();
-  document.getElementById('student-college-display').textContent = `${user.college} • ${user.branch || 'Engineering'}`;
-  document.getElementById('student-ref-code-display').textContent = user.referral_code;
+  const nameEl = document.getElementById('student-name-display');
+  if (nameEl) nameEl.textContent = user.full_name || 'Student';
 
-  const refUrl = `${window.location.origin}/r/${user.referral_code}`;
-  document.getElementById('student-ref-url-display').textContent = refUrl;
+  const avatarEl = document.getElementById('student-avatar-letter');
+  if (avatarEl && user.full_name) avatarEl.textContent = user.full_name.charAt(0).toUpperCase();
+
+  const collegeEl = document.getElementById('student-college-display');
+  if (collegeEl) collegeEl.textContent = `${user.college || ''} • ${user.branch || 'Engineering'}`;
+
+  const codeEl = document.getElementById('student-ref-code-display');
+  if (codeEl) codeEl.textContent = user.referral_code || '';
+
+  const urlEl = document.getElementById('student-ref-url-display');
+  if (urlEl) {
+    const refUrl = `${window.location.origin}/r/${user.referral_code || ''}`;
+    urlEl.textContent = refUrl;
+  }
 }
 
 async function refreshStudentDashboard() {
@@ -608,10 +647,13 @@ async function refreshStudentDashboard() {
         const clicks = data.referrals.clicks !== undefined ? data.referrals.clicks : (data.referrals.total || 0);
         const successful = data.referrals.successful || 0;
         
-        document.getElementById('student-invited-count').textContent = clicks;
-        document.getElementById('student-registered-count').textContent = successful;
+        const invEl = document.getElementById('student-invited-count');
+        if (invEl) invEl.textContent = clicks;
+        const regEl = document.getElementById('student-registered-count');
+        if (regEl) regEl.textContent = successful;
         const rate = clicks > 0 ? Math.round((successful / clicks) * 100) : 0;
-        document.getElementById('student-conv-rate').textContent = clicks > 0 ? `${rate}%` : '0%';
+        const convEl = document.getElementById('student-conv-rate');
+        if (convEl) convEl.textContent = clicks > 0 ? `${rate}%` : '0%';
         
         
         // --- Dashboard UX Additions ---

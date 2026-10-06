@@ -966,18 +966,61 @@
             <p style="color:var(--text-muted); font-size:0.9rem;">Sign in to your account</p>
           </div>
           <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="login-email" class="form-input" placeholder="email@example.com">
+            <label>Email Address or Phone Number</label>
+            <input type="text" id="login-email" class="form-input" placeholder="email@example.com or 10-digit phone" autocomplete="username" onkeydown="if(event.key==='Enter') performLogin()">
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" id="login-password" class="form-input" placeholder="Students: enter phone number">
+            <input type="password" id="login-password" class="form-input" placeholder="Students: enter registered phone number" autocomplete="current-password" onkeydown="if(event.key==='Enter') performLogin()">
           </div>
           <div id="login-error" style="color:var(--rose-primary); font-size:0.85rem; margin-bottom:1rem; display:none;">
           </div>
           <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="performLogin()">
             Sign In
           </button>
+
+          <!-- Divider & Demo Credentials Section -->
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.6rem;">
+              <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.05em; color:var(--cyan-primary); text-transform:uppercase; background:rgba(6, 182, 212, 0.12); padding:0.2rem 0.6rem; border-radius:var(--radius-full); border:1px solid rgba(6, 182, 212, 0.25);">
+                DEMO ACCESS
+              </span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Quick-fill for evaluation</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.85rem; line-height:1.4;">
+              Use these credentials to explore the student and admin experiences.
+            </p>
+
+            <div style="display:flex; flex-direction:column; gap:0.65rem;">
+              <!-- Student Demo Box -->
+              <div style="background:var(--bg-dark); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.75rem 0.85rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                  <span style="font-size:0.82rem; font-weight:600; color:var(--text-white);">Student Demo</span>
+                  <button type="button" id="btn-use-student-demo" class="btn btn-secondary btn-sm" style="font-size:0.72rem; padding:0.2rem 0.55rem;" onclick="useDemoCredentials('student')">
+                    Use Student Demo
+                  </button>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); display:flex; flex-direction:column; gap:0.15rem;">
+                  <div><span style="color:var(--text-secondary);">Phone / User:</span> <code style="color:var(--cyan-primary); background:rgba(6,182,212,0.1); padding:1px 5px; border-radius:3px;">9876500060</code></div>
+                  <div><span style="color:var(--text-secondary);">Password:</span> <code style="color:var(--cyan-primary); background:rgba(6,182,212,0.1); padding:1px 5px; border-radius:3px;">9876500060</code></div>
+                </div>
+              </div>
+
+              <!-- Admin Demo Box -->
+              <div style="background:var(--bg-dark); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.75rem 0.85rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                  <span style="font-size:0.82rem; font-weight:600; color:var(--text-white);">Admin Demo</span>
+                  <button type="button" id="btn-use-admin-demo" class="btn btn-secondary btn-sm" style="font-size:0.72rem; padding:0.2rem 0.55rem;" onclick="useDemoCredentials('admin')">
+                    Use Admin Demo
+                  </button>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); display:flex; flex-direction:column; gap:0.15rem;">
+                  <div><span style="color:var(--text-secondary);">Email:</span> <code style="color:var(--amber-primary); background:rgba(245,158,11,0.1); padding:1px 5px; border-radius:3px;">demo-admin@ai60.com</code></div>
+                  <div><span style="color:var(--text-secondary);">Password:</span> <code style="color:var(--amber-primary); background:rgba(245,158,11,0.1); padding:1px 5px; border-radius:3px;">demo-admin123</code></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

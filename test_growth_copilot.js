@@ -22,6 +22,7 @@ const axios = require('axios');
 const PORT = 3030;
 const BASE = `http://localhost:${PORT}`;
 const TEST_DB = path.join(__dirname, 'data', 'test_copilot.db');
+process.env.AI60_DB_PATH = TEST_DB;
 
 let serverProcess;
 let passed = 0;
