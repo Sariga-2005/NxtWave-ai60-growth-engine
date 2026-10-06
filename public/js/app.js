@@ -96,8 +96,8 @@ function switchView(viewName, updateHash = true) {
   // Admin-gate: require admin token for admin views
   const adminViews = ['admin', 'strategy'];
   if (adminViews.includes(viewName) && !STATE.adminToken) {
-    viewName = 'admin-login';
-    if (updateHash) window.location.hash = viewName;
+    openRegisterModal();
+    return;
   }
 
   const targetId = `view-${viewName}`;
@@ -165,11 +165,15 @@ function logoutUser() {
 function showAdminNav() {
   const adminNav = document.querySelector('.admin-nav');
   if (adminNav) adminNav.style.display = 'flex';
+  const studentNav = document.querySelector('.student-nav');
+  if (studentNav) studentNav.style.display = 'none';
 }
 
 function hideAdminNav() {
   const adminNav = document.querySelector('.admin-nav');
   if (adminNav) adminNav.style.display = 'none';
+  const studentNav = document.querySelector('.student-nav');
+  if (studentNav) studentNav.style.display = 'flex';
 }
 
 async function performLogin(email, password) {
@@ -1110,8 +1114,8 @@ async function generateAiInsights() {
     
     const data = await res.json();
     
-    if (data.status === 'unavailable' || !res.ok) {
-      box.innerHTML = `<div style="background:var(--bg-surface); padding:1rem; border-left:3px solid var(--amber-primary); color:var(--text-white);">AI Growth Copilot is temporarily unavailable.</div>`;
+    if (data.status === 'unavailable' || !res.ok || !data.analysis) {
+      box.innerHTML = `<div style="background:var(--bg-surface); padding:1rem; border-left:3px solid var(--amber-primary); color:var(--text-white);">AI analysis is temporarily unavailable. Please try again.</div>`;
       if (provBox) provBox.style.display = 'none';
       return;
     }

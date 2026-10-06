@@ -70,8 +70,14 @@ class GeminiProvider extends LLMProvider {
       
       this._recordSuccess();
       const text = response.data.candidates[0].content.parts[0].text;
+      let cleanText = text.trim();
+      if (cleanText.startsWith('\`\`\`json')) {
+        cleanText = cleanText.substring(7, cleanText.length - 3).trim();
+      } else if (cleanText.startsWith('\`\`\`')) {
+        cleanText = cleanText.substring(3, cleanText.length - 3).trim();
+      }
       return {
-        data: JSON.parse(text),
+        data: JSON.parse(cleanText),
         provider: this.providerName,
         model: model,
         usage: response.data.usageMetadata

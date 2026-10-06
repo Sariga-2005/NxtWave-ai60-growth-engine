@@ -7,7 +7,7 @@ async function runTests() {
   let token;
   try {
     const res = await axios.post(`${API_BASE}/api/admin/login`, {
-      email: 'admin@ai60.demo',
+      email: 'admin@ai60.com',
       password: 'admin123'
     });
     token = res.data.token;
