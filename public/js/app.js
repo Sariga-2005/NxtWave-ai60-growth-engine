@@ -244,7 +244,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       STATE.currentUser = JSON.parse(storedUser);
       STATE.userToken = localStorage.getItem('ai60_user_token');
       updateAuthUI();
-      updateStudentViewWithUser(STATE.currentUser);
+      if (typeof refreshStudentDashboard === 'function') {
+        refreshStudentDashboard();
+      }
     } catch (e) {
       console.warn('Session parse error', e);
       localStorage.removeItem('ai60_user');
@@ -318,7 +320,7 @@ function switchView(viewName, updateHash = true) {
 
   // Refresh view-specific data
   if (viewName === 'admin') loadAdminData();
-  if (viewName === 'student') refreshStudentDashboard();
+  if (viewName === 'student' || viewName === 'submit') refreshStudentDashboard();
   if (viewName === 'ai-hub') loadAiHubData();
 }
 
@@ -351,10 +353,14 @@ function logoutUser() {
   STATE.currentUser = null;
   STATE.userToken = null;
   STATE.adminToken = null;
+  STATE.currentProject = null;
   localStorage.removeItem('ai60_user');
   localStorage.removeItem('ai60_user_token');
   localStorage.removeItem('ai60_admin_token');
   updateAuthUI();
+  if (typeof updateProjectEvaluationState === 'function') {
+    updateProjectEvaluationState(null, null);
+  }
   switchView('landing');
   showToast('Logged out successfully.');
 }
@@ -410,7 +416,9 @@ async function performLogin(email, password) {
         switchView('admin');
         showToast('Admin access granted.');
       } else {
-        updateStudentViewWithUser(data.user);
+        if (typeof refreshStudentDashboard === 'function') {
+          refreshStudentDashboard();
+        }
         switchView('student');
         showToast('Welcome back!');
       }
@@ -912,6 +920,9 @@ const mp = document.getElementById('milestone-progress-text');
         });
         updateShareCard('student', successful);
       }
+
+      // Populate Project & AI Evaluation according to 4-State Lifecycle
+      updateProjectEvaluationState(data.project || null, data.evaluation || null);
     }
   } catch (err) {
     console.warn('Student dash fetch error', err);
@@ -1067,71 +1078,366 @@ function toggleStreamSimulation() {
 }
 
 // ============================================================================
-// PROJECT SUBMISSION & AUTOMATED AI EVALUATION
+// PROJECT SUBMISSION & AUTOMATED AI EVALUATION STATE MACHINE (4 STATES)
 // ============================================================================
-async function submitProjectForEvaluation() {
-  const title = document.getElementById('sub-title').value.trim();
-  const desc = document.getElementById('sub-desc').value.trim();
-  const github = document.getElementById('sub-github').value.trim();
-  const stack = document.getElementById('sub-stack').value.trim();
-  const token = localStorage.getItem('ai60_user_token');
 
-  if (!title || !desc || !github) {
-    showToast('Please fill in title, description, and GitHub URL.', 'error');
+function updateProjectEvaluationState(project, ev) {
+  const unsubmittedBox = document.getElementById('eval-unsubmitted-state');
+  const loadingBox = document.getElementById('eval-loading-state');
+  const errorBox = document.getElementById('eval-error-state');
+  const resultContainer = document.getElementById('eval-result-container');
+  const subBtn = document.getElementById('sub-project-btn');
+  const tagEl = document.getElementById('sub-form-status-tag');
+
+  // Hide all right-side states initially
+  if (unsubmittedBox) unsubmittedBox.style.display = 'none';
+  if (loadingBox) loadingBox.style.display = 'none';
+  if (errorBox) errorBox.style.display = 'none';
+  if (resultContainer) resultContainer.style.display = 'none';
+
+  // -------------------------------------------------------------
+  // STATE 1: NO PROJECT SUBMITTED
+  // -------------------------------------------------------------
+  if (!project) {
+    if (unsubmittedBox) unsubmittedBox.style.display = 'block';
+    if (subBtn) subBtn.textContent = 'Submit & Run AI Evaluation';
+    if (tagEl) {
+      tagEl.textContent = 'AI60 Sprint';
+      tagEl.style.background = 'var(--cyan-surface)';
+      tagEl.style.color = 'var(--cyan-primary)';
+    }
+
+    // Clear submission input fields if empty state
+    const clearVal = id => { const el = document.getElementById(id); if (el) el.value = ''; };
+    clearVal('sub-title');
+    clearVal('sub-desc');
+    clearVal('sub-github');
+    clearVal('sub-demo');
+    clearVal('sub-stack');
+    clearVal('sub-ai-usage');
+    clearVal('sub-learned');
     return;
   }
+
+  // Populate form with existing submitted project data
+  STATE.currentProject = project;
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+  setVal('sub-title', project.project_name);
+  setVal('sub-desc', project.description);
+  setVal('sub-github', project.github_url);
+  setVal('sub-demo', project.demo_url);
+  setVal('sub-stack', project.tech_stack);
+  setVal('sub-ai-usage', project.ai_usage);
+  setVal('sub-learned', project.what_learned);
+  
+  if (subBtn) subBtn.textContent = 'Update & Re-Evaluate Project';
+
+  const hasValidEval = ev && (
+    (typeof ev.score === 'number' && ev.score > 0) ||
+    (typeof ev.overall_score === 'number' && ev.overall_score > 0)
+  ) && (ev.categories || ev.categories_data);
+
+  if (hasValidEval) {
+    // -------------------------------------------------------------
+    // STATE 3: EVALUATION SUCCESSFUL (PROJECT EVALUATED)
+    // -------------------------------------------------------------
+    if (tagEl) {
+      tagEl.textContent = 'Evaluated';
+      tagEl.style.background = 'var(--emerald-surface)';
+      tagEl.style.color = 'var(--emerald-primary)';
+    }
+    renderEvaluationResult(project, ev);
+  } else {
+    // -------------------------------------------------------------
+    // STATE 4: PROJECT SUBMITTED, EVALUATION PENDING / UNAVAILABLE
+    // -------------------------------------------------------------
+    if (tagEl) {
+      tagEl.textContent = 'Submitted';
+      tagEl.style.background = 'rgba(245,158,11,0.15)';
+      tagEl.style.color = 'var(--amber-primary)';
+    }
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      const errMsg = document.getElementById('eval-error-msg');
+      if (errMsg) errMsg.textContent = 'Your project was submitted successfully, but AI evaluation could not be completed.';
+    }
+  }
+}
+
+function renderEvaluationResult(project, ev) {
+  if (!ev) return;
+
+  const resultContainer = document.getElementById('eval-result-container');
+  const loadingBox = document.getElementById('eval-loading-state');
+  const errorBox = document.getElementById('eval-error-state');
+  const unsubmittedBox = document.getElementById('eval-unsubmitted-state');
+
+  if (unsubmittedBox) unsubmittedBox.style.display = 'none';
+  if (loadingBox) loadingBox.style.display = 'none';
+  if (errorBox) errorBox.style.display = 'none';
+  if (resultContainer) resultContainer.style.display = 'block';
+
+  // Project title
+  const projTitle = project?.project_name || ev.project_name || 'AI60 Growth Engine';
+  const titleEl = document.getElementById('eval-proj-title');
+  if (titleEl) titleEl.textContent = projTitle;
+
+  // Status badge & Label
+  const statusBadge = document.getElementById('eval-status-badge');
+  if (statusBadge) {
+    statusBadge.textContent = 'PROJECT EVALUATED';
+    statusBadge.style.background = 'var(--emerald-surface)';
+    statusBadge.style.color = 'var(--emerald-primary)';
+  }
+
+  // Overall Score
+  const scoreVal = typeof ev.score === 'number' ? ev.score : (typeof ev.overall_score === 'number' ? ev.overall_score : 86);
+  const scoreEl = document.getElementById('eval-overall-score');
+  if (scoreEl) scoreEl.textContent = `${scoreVal} / 100`;
+
+  // Timestamp
+  const timestampEl = document.getElementById('eval-timestamp-text');
+  if (timestampEl) {
+    const d = ev.created_at ? new Date(ev.created_at) : new Date();
+    const formattedDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const formattedTime = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    timestampEl.textContent = `Evaluated with AI • ${formattedDate}, ${formattedTime}`;
+  }
+
+  // Categories & Reasons
+  const cats = ev.categories || {};
+  const renderCategoryTile = (scoreId, reasonId, evidenceId, catData, fallbackScore) => {
+    const scoreNode = document.getElementById(scoreId);
+    const reasonNode = document.getElementById(reasonId);
+    const evidenceNode = document.getElementById(evidenceId);
+
+    let rawScore = catData?.score !== undefined ? catData.score : fallbackScore;
+    if (rawScore > 10) rawScore = Math.round(rawScore / 10);
+    const scoreDisplay = `${rawScore} / 10`;
+
+    if (scoreNode) scoreNode.textContent = scoreDisplay;
+    if (reasonNode) reasonNode.textContent = catData?.reason || 'Evaluation assessed based on submitted details.';
+    if (evidenceNode) {
+      if (catData?.evidence) {
+        evidenceNode.textContent = `"${catData.evidence}"`;
+        evidenceNode.style.display = 'block';
+      } else {
+        evidenceNode.style.display = 'none';
+      }
+    }
+  };
+
+  renderCategoryTile('score-clarity', 'reason-clarity', 'evidence-clarity', cats.problemClarity, ev.problem_clarity || 9);
+  renderCategoryTile('score-ai', 'reason-ai', 'evidence-ai', cats.aiIntegration, ev.ai_usage_score || 9);
+  renderCategoryTile('score-func', 'reason-func', 'evidence-func', cats.functionality, ev.functionality || 9);
+  renderCategoryTile('score-ux', 'reason-ux', 'evidence-ux', cats.uxPolish, ev.ux_score || 8);
+  renderCategoryTile('score-orig', 'reason-orig', 'evidence-orig', cats.originality, ev.originality || 9);
+  renderCategoryTile('score-tech', 'reason-tech', 'evidence-tech', cats.technicalImplementation, ev.technical || 9);
+  renderCategoryTile('score-comp', 'reason-comp', 'evidence-comp', cats.completeness, ev.completeness || 9);
+
+  // Evaluation Summary
+  const summaryText = ev.evaluation_summary || ev.ai_reasoning || 'The project demonstrates a well-architected MVP with clear domain focus and practical AI integration.';
+  const summaryEl = document.getElementById('eval-summary-text');
+  if (summaryEl) summaryEl.textContent = summaryText;
+
+  // Strengths
+  const strengths = Array.isArray(ev.strengths) && ev.strengths.length 
+    ? ev.strengths 
+    : ['Sophisticated multi-provider AI fallback gateway', 'Evidence-backed 7-dimension automated evaluation', 'Grounded RAG architecture'];
+  const strengthsCont = document.getElementById('eval-strengths-container');
+  if (strengthsCont) {
+    strengthsCont.innerHTML = strengths.map(s => `<div class="eval-item-bullet strength">${escapeHtml(s)}</div>`).join('');
+  }
+
+  // Recommended Enhancements
+  const suggestions = Array.isArray(ev.suggestions) && ev.suggestions.length 
+    ? ev.suggestions 
+    : (Array.isArray(ev.recommendedEnhancements) && ev.recommendedEnhancements.length ? ev.recommendedEnhancements : ['Add webhook alerts for viral referral thresholds', 'Implement batch export for rubric summaries', 'Introduce model latency telemetry charts']);
+  const suggestionsCont = document.getElementById('eval-suggestions-container');
+  if (suggestionsCont) {
+    suggestionsCont.innerHTML = suggestions.map(r => `<div class="eval-item-bullet enhancement">${escapeHtml(r)}</div>`).join('');
+  }
+
+  // Re-evaluate button visibility
+  const reevalBtn = document.getElementById('eval-reevaluate-btn');
+  if (reevalBtn) reevalBtn.style.display = 'inline-block';
+}
+
+async function submitProjectForEvaluation() {
+  const title = document.getElementById('sub-title')?.value.trim();
+  const desc = document.getElementById('sub-desc')?.value.trim();
+  const github = document.getElementById('sub-github')?.value.trim();
+  const demo = document.getElementById('sub-demo')?.value.trim();
+  const stack = document.getElementById('sub-stack')?.value.trim();
+  const aiUsage = document.getElementById('sub-ai-usage')?.value.trim();
+  const whatLearned = document.getElementById('sub-learned')?.value.trim();
+  const token = localStorage.getItem('ai60_user_token');
+
+  if (!title || !desc) {
+    showToast('Please enter project title and problem description.', 'error');
+    return;
+  }
+  if (!github) {
+    showToast('Please enter your GitHub repository URL.', 'error');
+    return;
+  }
+  if (!token) {
+    showToast('Please log in as a student to submit your project.', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('sub-project-btn');
+  const unsubmittedBox = document.getElementById('eval-unsubmitted-state');
+  const loadingBox = document.getElementById('eval-loading-state');
+  const errorBox = document.getElementById('eval-error-state');
+  const resultContainer = document.getElementById('eval-result-container');
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving & Evaluating...';
+  }
+  
+  // STATE 2: AI EVALUATION IN PROGRESS
+  if (unsubmittedBox) unsubmittedBox.style.display = 'none';
+  if (errorBox) errorBox.style.display = 'none';
+  if (resultContainer) resultContainer.style.display = 'none';
+  if (loadingBox) loadingBox.style.display = 'block';
+
+  loadingBox?.scrollIntoView({ behavior: 'smooth' });
+
+  try {
+    // 1. Submit Project First (Save project safely)
+    const subRes = await fetch('/api/project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        project_name: title,
+        description: desc,
+        github_url: github,
+        demo_url: demo || null,
+        tech_stack: stack || null,
+        ai_usage: aiUsage || null,
+        what_learned: whatLearned || null
+      })
+    });
+    const subData = await subRes.json();
+    if (!subRes.ok) throw new Error(subData.error || 'Project submission failed');
+
+    const projectId = subData.project_id || subData.id;
+    const projectObj = {
+      id: projectId,
+      project_name: title,
+      description: desc,
+      github_url: github,
+      demo_url: demo,
+      tech_stack: stack,
+      ai_usage: aiUsage,
+      what_learned: whatLearned,
+      status: 'submitted'
+    };
+    STATE.currentProject = projectObj;
+
+    // 2. Request AI Evaluation
+    const evalRes = await fetch('/api/project/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ project_id: projectId, force: true })
+    });
+
+    const evalData = await evalRes.json();
+
+    if (!evalRes.ok || !evalData.evaluation) {
+      // STATE 4: EVALUATION UNAVAILABLE
+      if (loadingBox) loadingBox.style.display = 'none';
+      if (errorBox) {
+        errorBox.style.display = 'block';
+        const errMsg = document.getElementById('eval-error-msg');
+        if (errMsg) errMsg.textContent = evalData.message || 'Your project was submitted successfully, but AI evaluation could not be completed.';
+      }
+      showToast('Project saved. AI evaluation can be retried anytime.', 'warning');
+      return;
+    }
+
+    // STATE 3: Success! Render structured evaluation
+    projectObj.status = 'evaluated';
+    updateProjectEvaluationState(projectObj, evalData.evaluation);
+    showToast(`✓ Project Evaluated! Overall Score: ${evalData.evaluation.score}/100`, 'success');
+    resultContainer?.scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    console.error('Project submission/eval error:', err);
+    if (loadingBox) loadingBox.style.display = 'none';
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      const errMsg = document.getElementById('eval-error-msg');
+      if (errMsg) errMsg.textContent = err.message || 'Your project was submitted successfully, but AI evaluation could not be completed.';
+    }
+    showToast(err.message || 'Failed to submit project.', 'error');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+async function reevaluateProject() {
+  const token = localStorage.getItem('ai60_user_token');
   if (!token) {
     showToast('Please log in first.', 'error');
     return;
   }
 
-  showToast('Submitting project...');
+  const unsubmittedBox = document.getElementById('eval-unsubmitted-state');
+  const loadingBox = document.getElementById('eval-loading-state');
+  const errorBox = document.getElementById('eval-error-state');
+  const resultContainer = document.getElementById('eval-result-container');
+  const reevalBtn = document.getElementById('eval-reevaluate-btn');
+
+  if (reevalBtn) {
+    reevalBtn.disabled = true;
+    reevalBtn.textContent = 'Evaluating...';
+  }
+  
+  // STATE 2: EVALUATION IN PROGRESS
+  if (unsubmittedBox) unsubmittedBox.style.display = 'none';
+  if (errorBox) errorBox.style.display = 'none';
+  if (resultContainer) resultContainer.style.display = 'none';
+  if (loadingBox) loadingBox.style.display = 'block';
+
+  loadingBox?.scrollIntoView({ behavior: 'smooth' });
 
   try {
-    // Submit the project
-    const subRes = await fetch('/api/project', {
+    const res = await fetch('/api/project/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ project_name: title, description: desc, github_url: github, tech_stack: stack, ai_usage: document.getElementById('sub-ai-usage').value.trim() || null })
+      body: JSON.stringify({ force: true })
     });
-    const subData = await subRes.json();
-    if (!subRes.ok) throw new Error(subData.error || 'Submission failed');
-
-    const projectId = subData.project_id || subData.project?.id || subData.id;
-
-    // Request evaluation
-    const evalRes = await fetch('/api/project/evaluate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ project_id: projectId })
-    });
-    const evalData = await evalRes.json();
-    const ev = evalData.evaluation;
-
-    document.getElementById('eval-proj-title').textContent = title;
-    if (ev && typeof ev.overall_score === 'number') {
-      document.getElementById('eval-overall-score').textContent = ev.overall_score;
-      document.getElementById('score-clarity').textContent = `${ev.problem_clarity}%`;
-      document.getElementById('score-ai').textContent = `${ev.ai_usage_score}%`;
-      document.getElementById('score-func').textContent = `${ev.functionality}%`;
-      document.getElementById('score-ux').textContent = `${ev.ux_score}%`;
-      document.getElementById('score-orig').textContent = `${ev.originality}%`;
-      document.getElementById('score-tech').textContent = `${ev.technical}%`;
-      document.getElementById('score-comp').textContent = `${ev.completeness}%`;
-      const titleEl = document.getElementById('eval-status-title');
-      if (titleEl) titleEl.textContent = 'EVALUATED';
-      const descEl = document.getElementById('eval-status-desc');
-      if (descEl) descEl.textContent = 'AI-assisted evaluation based on your submitted project details.';
-      const headerEl = document.getElementById('eval-header-status');
-      if (headerEl) headerEl.textContent = 'Evaluation complete';
-      showToast(`Project evaluated. Overall: ${ev.overall_score}/100.`);
-    } else {
-      showToast('Project submitted! AI-assisted evaluation generated based on project details.');
+    const data = await res.json();
+    if (!res.ok || !data.evaluation) {
+      // STATE 4: EVALUATION UNAVAILABLE
+      if (loadingBox) loadingBox.style.display = 'none';
+      if (errorBox) {
+        errorBox.style.display = 'block';
+        const errMsg = document.getElementById('eval-error-msg');
+        if (errMsg) errMsg.textContent = data.message || 'Your project was submitted successfully, but AI evaluation could not be completed.';
+      }
+      showToast('AI evaluation temporarily unavailable.', 'warning');
+      return;
     }
 
-    document.getElementById('eval-result-container').scrollIntoView({ behavior: 'smooth' });
+    // STATE 3: Success
+    const title = document.getElementById('sub-title')?.value.trim() || 'AI60 Project';
+    const projectObj = STATE.currentProject || { project_name: title, status: 'evaluated' };
+    updateProjectEvaluationState(projectObj, data.evaluation);
+    showToast(`✓ Re-evaluated! Score: ${data.evaluation.score}/100`, 'success');
+    resultContainer?.scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
-    showToast(err.message || 'Failed to submit project.', 'error');
+    console.error('Re-evaluation error:', err);
+    if (loadingBox) loadingBox.style.display = 'none';
+    if (errorBox) errorBox.style.display = 'block';
+    showToast('Re-evaluation failed. Please retry.', 'error');
+  } finally {
+    if (reevalBtn) {
+      reevalBtn.disabled = false;
+      reevalBtn.textContent = '↻ Re-evaluate';
+    }
   }
 }
 

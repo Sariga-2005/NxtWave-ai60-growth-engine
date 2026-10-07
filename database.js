@@ -190,6 +190,10 @@ function initSchema(database) {
       suggestions TEXT,
       next_steps TEXT,
       ai_reasoning TEXT,
+      categories_data TEXT,
+      evaluation_summary TEXT,
+      eval_model TEXT,
+      eval_provider TEXT,
       admin_status TEXT DEFAULT 'pending' CHECK(admin_status IN ('pending','approved','rejected','changes_requested')),
       admin_override_score INTEGER,
       admin_notes TEXT,
@@ -198,6 +202,11 @@ function initSchema(database) {
       FOREIGN KEY (project_id) REFERENCES projects(id)
     );
   `);
+
+  try { database.run(`ALTER TABLE evaluations ADD COLUMN categories_data TEXT`); } catch (e) {}
+  try { database.run(`ALTER TABLE evaluations ADD COLUMN evaluation_summary TEXT`); } catch (e) {}
+  try { database.run(`ALTER TABLE evaluations ADD COLUMN eval_model TEXT`); } catch (e) {}
+  try { database.run(`ALTER TABLE evaluations ADD COLUMN eval_provider TEXT`); } catch (e) {}
 
   database.run(`
     CREATE TABLE IF NOT EXISTS ai_knowledge (

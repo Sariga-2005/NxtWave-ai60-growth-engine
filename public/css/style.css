@@ -2209,7 +2209,7 @@ select.form-select,
 
 .rubric-grid-7 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -2218,22 +2218,95 @@ select.form-select,
   background: var(--bg-surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.rubric-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
 }
 
 .rubric-tile-label {
   font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .rubric-tile-score {
   font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-white);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--emerald-primary);
+  margin: 0.3rem 0;
+}
+
+.rubric-tile-reason {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
   margin-top: 0.2rem;
+}
+
+.rubric-tile-evidence {
+  font-size: 0.72rem;
+  color: var(--cyan-primary);
+  background: var(--cyan-surface);
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+  border-left: 2px solid var(--cyan-primary);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.eval-loading-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.eval-error-box {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.eval-item-bullet {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.eval-item-bullet.strength::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--emerald-primary);
+  font-weight: bold;
+}
+
+.eval-item-bullet.enhancement::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--cyan-primary);
+  font-weight: bold;
 }
 
 /* ============================================================================

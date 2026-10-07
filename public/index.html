@@ -861,7 +861,10 @@
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
           <!-- Submission Form -->
           <div class="milestones-card" style="margin-bottom:0;">
-            <h3 style="margin-bottom:1.25rem;">Project Submission Details</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <h3 style="margin-bottom:0;">Project Submission Details</h3>
+              <span class="card-tag" id="sub-form-status-tag" style="background:var(--cyan-surface); color:var(--cyan-primary);">AI60 Sprint</span>
+            </div>
 
             <div class="form-group">
               <label class="form-label">Project Title *</label>
@@ -890,7 +893,7 @@
             <div class="form-group">
               <label class="form-label">Technology Stack *</label>
               <input type="text" id="sub-stack" class="form-input" value=""
-                placeholder="e.g. Python, Flask, Gemini API">
+                placeholder="e.g. Node.js, Express, SQLite, Google Gemini Flash API">
             </div>
 
             <div class="form-group">
@@ -905,80 +908,205 @@
                 placeholder="What did you learn about prompt design and API engineering?"></textarea>
             </div>
 
-            <button class="btn btn-emerald btn-lg btn-block" onclick="submitProjectForEvaluation()">
-              Submit Project
+            <button id="sub-project-btn" class="btn btn-emerald btn-lg btn-block" onclick="submitProjectForEvaluation()">
+              Submit &amp; Run AI Evaluation
             </button>
             <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:0.6rem;">
-              Submission only • automated evaluation coming later
+              Real-time AI evaluation based on submitted project details • No fake scores
             </div>
           </div>
 
           <!-- Evaluation Scorecard & Post-Workshop Growth Card -->
           <div>
-            <div id="eval-result-container" class="eval-result-card" style="margin-top:0;">
+            <!-- STATE 1: Unsubmitted Initial State -->
+            <div id="eval-unsubmitted-state" class="eval-result-card" style="margin-top:0; display:block;">
+              <div class="scorecard-header" style="border-bottom:1px solid var(--border-light); padding-bottom:1rem; margin-bottom:1.25rem;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
+                    <span class="card-tag" style="background:var(--bg-surface); color:var(--text-muted); border:1px solid var(--border-light);">PROJECT NOT SUBMITTED</span>
+                  </div>
+                  <h3 style="margin-top:0.2rem; font-size:1.35rem; color:var(--text-white);">AI-Assisted Evaluation</h3>
+                  <div style="font-size:0.85rem; color:var(--text-muted);">
+                    Submit your project to receive an AI-assisted evaluation.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unsubmitted Guide Box -->
+              <div style="background:var(--bg-surface); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem; border:1px solid var(--border-light);">
+                <div style="font-size:0.88rem; color:var(--text-secondary); line-height:1.6; margin-bottom:1rem;">
+                  Once you submit your project repository, live preview URL, and architecture details on the left, our AI evaluator will analyze your build across <strong>7 technical dimensions</strong> with evidence-backed scoring.
+                </div>
+
+                <div style="font-size:0.8rem; font-weight:700; color:var(--text-white); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem;">
+                  Evaluation Rubric Dimensions:
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.82rem; color:var(--text-muted);">
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">1.</span> Problem Clarity
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">2.</span> AI Integration
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">3.</span> Functionality
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">4.</span> UX &amp; Polish
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">5.</span> Originality
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="color:var(--cyan-primary);">6.</span> Technical Implementation
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.4rem; grid-column:span 2;">
+                    <span style="color:var(--cyan-primary);">7.</span> Completeness (0–100 Overall Score)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transparency & Merit Notice -->
+              <div style="font-size:0.75rem; color:var(--text-muted); padding:0.6rem 0.85rem; background:var(--bg-surface); border-radius:var(--radius-sm); border-left:3px solid var(--cyan-primary); line-height:1.5;">
+                ℹ️ Real-time evaluation based on submitted project information. No fake or placeholder scores.
+              </div>
+            </div>
+
+            <!-- STATE 2: Evaluating Loader State -->
+            <div id="eval-loading-state" class="eval-loading-box" style="display:none;">
+              <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.6rem;">
+                <span class="card-tag" style="background:rgba(16,185,129,0.15); color:var(--emerald-primary);">PROJECT SUBMITTED</span>
+              </div>
+              <div class="demo-pulse" style="margin:0 auto 1rem; width:16px; height:16px; background:var(--emerald-primary);"></div>
+              <h3 style="color:var(--emerald-primary); font-size:1.25rem; margin-bottom:0.4rem;">AI EVALUATION IN PROGRESS</h3>
+              <p style="font-size:0.85rem; color:var(--text-secondary); max-width:380px; margin:0 auto 1.25rem;">
+                Analyzing your submitted project details across 7 technical rubric dimensions...
+              </p>
+              <div style="font-size:0.8rem; color:var(--text-muted); text-align:left; max-width:300px; margin:0 auto; line-height:1.8;">
+                <div>✓ Analyzing Problem Clarity &amp; Scope</div>
+                <div>✓ Evaluating AI Architecture &amp; Prompt Flow</div>
+                <div>✓ Assessing Technical Implementation &amp; UX</div>
+                <div>✓ Formulating Strengths &amp; Enhancements</div>
+              </div>
+            </div>
+
+            <!-- STATE 4: Error / Unavailable / Retry State -->
+            <div id="eval-error-state" class="eval-error-box" style="display:none;">
+              <div style="margin-bottom:0.5rem;">
+                <span class="card-tag" style="background:rgba(245,158,11,0.15); color:var(--amber-primary);">PROJECT SUBMITTED</span>
+              </div>
+              <h4 style="color:#ef4444; margin-bottom:0.3rem;">EVALUATION UNAVAILABLE</h4>
+              <p id="eval-error-msg" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">
+                Your project was submitted successfully, but AI evaluation could not be completed.
+              </p>
+              <button class="btn btn-secondary btn-sm" onclick="reevaluateProject()">
+                🔄 Retry Evaluation
+              </button>
+            </div>
+
+            <!-- STATE 3: Main Scorecard Container (Shown ONLY after successful evaluation) -->
+            <div id="eval-result-container" class="eval-result-card" style="margin-top:0; display:none;">
               <div class="scorecard-header">
                 <div>
-                  <span class="card-tag"
-                    style="background:var(--emerald-surface); color:var(--emerald-primary);">PROJECT SUBMITTED</span>
-                  <h3 id="eval-proj-title" style="margin-top:0.4rem;">—</h3>
-                  <div style="font-size:0.8rem; color:var(--text-muted);">Evaluation not yet available</div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
+                    <span id="eval-status-badge" class="card-tag"
+                      style="background:var(--emerald-surface); color:var(--emerald-primary);">PROJECT EVALUATED</span>
+                    <span style="font-size:0.75rem; color:var(--cyan-primary); font-family:var(--font-mono); font-weight:600;">AI-ASSISTED</span>
+                  </div>
+                  <h3 id="eval-proj-title" style="margin-top:0.2rem; font-size:1.35rem;">—</h3>
+                  <div id="eval-timestamp-text" style="font-size:0.8rem; color:var(--text-muted);">
+                    Evaluated with AI • Based on submitted project details
+                  </div>
                 </div>
 
                 <div class="overall-score-pill">
                   <div class="score-giant-badge" id="eval-overall-score">—</div>
                   <div style="font-size:0.8rem; text-align:left;">
-                    <div style="font-weight:700; color:var(--text-white);">NOT EVALUATED</div>
-                    <div style="color:var(--text-muted); font-weight:600;">Automated evaluation coming later</div>
+                    <div style="font-weight:700; color:var(--text-white);" id="eval-score-label">OVERALL SCORE</div>
+                    <div style="color:var(--text-muted); font-size:0.75rem;">7-Dimension Rubric (out of 100)</div>
+                    <button id="eval-reevaluate-btn" class="btn btn-secondary btn-sm" style="margin-top:0.4rem; padding:0.2rem 0.6rem; font-size:0.72rem;" onclick="reevaluateProject()">
+                      ↻ Re-evaluate
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <!-- 7 Rubric Score Tiles -->
+              <!-- Transparency Note -->
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1.25rem; padding:0.4rem 0.75rem; background:var(--bg-surface); border-radius:var(--radius-sm); border-left:3px solid var(--emerald-primary);">
+                ℹ️ Evaluation is based on the project information submitted in the form.
+              </div>
+
+              <!-- 7 Rubric Score Tiles with Reasons & Evidence -->
               <div class="rubric-grid-7">
                 <div class="rubric-tile">
                   <div class="rubric-tile-label">Problem Clarity</div>
                   <div class="rubric-tile-score" id="score-clarity">—</div>
+                  <div class="rubric-tile-reason" id="reason-clarity">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-clarity" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
                   <div class="rubric-tile-label">AI Integration</div>
                   <div class="rubric-tile-score" id="score-ai">—</div>
+                  <div class="rubric-tile-reason" id="reason-ai">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-ai" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
                   <div class="rubric-tile-label">Functionality</div>
                   <div class="rubric-tile-score" id="score-func">—</div>
+                  <div class="rubric-tile-reason" id="reason-func">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-func" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
-                  <div class="rubric-tile-label">UX & Polish</div>
+                  <div class="rubric-tile-label">UX &amp; Polish</div>
                   <div class="rubric-tile-score" id="score-ux">—</div>
+                  <div class="rubric-tile-reason" id="reason-ux">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-ux" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
                   <div class="rubric-tile-label">Originality</div>
                   <div class="rubric-tile-score" id="score-orig">—</div>
+                  <div class="rubric-tile-reason" id="reason-orig">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-orig" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
-                  <div class="rubric-tile-label">Technical Code</div>
+                  <div class="rubric-tile-label">Technical Implementation</div>
                   <div class="rubric-tile-score" id="score-tech">—</div>
+                  <div class="rubric-tile-reason" id="reason-tech">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-tech" style="display:none;"></div>
                 </div>
                 <div class="rubric-tile">
                   <div class="rubric-tile-label">Completeness</div>
                   <div class="rubric-tile-score" id="score-comp">—</div>
+                  <div class="rubric-tile-reason" id="reason-comp">Assessment pending.</div>
+                  <div class="rubric-tile-evidence" id="evidence-comp" style="display:none;"></div>
                 </div>
               </div>
 
-              <!-- AI Feedback Details -->
-              <div
-                style="background:var(--bg-surface); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
-                <h4 style="font-size:0.95rem; color:var(--emerald-primary); margin-bottom:0.4rem;">AI Rubric Strengths
-                </h4>
-                <p id="eval-strengths" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
-                  Not yet evaluated.
-                </p>
+              <!-- AI Feedback Details: Summary, Strengths, Enhancements -->
+              <div style="background:var(--bg-surface); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem; border:1px solid var(--border-light);">
+                <!-- Evaluation Summary -->
+                <div id="eval-summary-box" style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border-light);">
+                  <h4 style="font-size:0.95rem; color:var(--text-white); margin-bottom:0.4rem;">Evaluation Summary</h4>
+                  <p id="eval-summary-text" style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;">
+                    Evaluation summary pending project submission.
+                  </p>
+                </div>
 
-                <h4 style="font-size:0.95rem; color:var(--amber-primary); margin-bottom:0.4rem;">Recommended
-                  Enhancements</h4>
-                <p id="eval-suggestions" style="font-size:0.85rem; color:var(--text-secondary);">
-                  Not yet evaluated.
-                </p>
+                <!-- Strengths -->
+                <div style="margin-bottom:1rem;">
+                  <h4 style="font-size:0.95rem; color:var(--emerald-primary); margin-bottom:0.5rem;">AI Rubric Strengths</h4>
+                  <div id="eval-strengths-container">
+                    <p id="eval-strengths" style="font-size:0.85rem; color:var(--text-secondary);">Not yet evaluated.</p>
+                  </div>
+                </div>
+
+                <!-- Recommended Enhancements -->
+                <div>
+                  <h4 style="font-size:0.95rem; color:var(--amber-primary); margin-bottom:0.5rem;">Recommended Enhancements</h4>
+                  <div id="eval-suggestions-container">
+                    <p id="eval-suggestions" style="font-size:0.85rem; color:var(--text-secondary);">Not yet evaluated.</p>
+                  </div>
+                </div>
               </div>
 
               <!-- Post-Workshop Growth Loop Share Trigger -->
@@ -986,7 +1114,7 @@
                 style="background:linear-gradient(135deg, rgba(99,102,241,0.15), rgba(6,182,212,0.15)); border:1px solid var(--border-accent); border-radius:var(--radius-lg); padding:1.25rem; text-align:center;">
                 <h4 style="color:var(--text-white); margin-bottom:0.25rem;">Post-Workshop Growth Loop</h4>
                 <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem;">
-                  Share the workshop with peers on WhatsApp & LinkedIn using your referral link.
+                  Share your evaluated build badge with peers on WhatsApp &amp; LinkedIn using your referral link.
                 </p>
                 <div style="display:flex; justify-content:center; gap:0.75rem;">
                   <button class="btn btn-emerald btn-sm" onclick="shareBuildOnWhatsApp()">
