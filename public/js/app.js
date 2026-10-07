@@ -21,9 +21,204 @@ const UTM_SOURCE = URL_PARAMS.get('utm_source') || localStorage.getItem('ai60_ut
 const UTM_CAMPAIGN = URL_PARAMS.get('utm_campaign') || localStorage.getItem('ai60_utm_campaign') || '';
 
 // ============================================================================
+// THEME SWITCHER (DARK / LIGHT SYSTEM)
+// ============================================================================
+function initTheme() {
+  const saved = localStorage.getItem('ai60_theme');
+  const theme = saved === 'light' ? 'light' : 'dark';
+  applyTheme(theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem('ai60_theme', next);
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+    btn.setAttribute('title', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+  }
+}
+
+// ============================================================================
+// AI60 SPLASH / LOADING SCREEN (Shown once per browser session)
+// ============================================================================
+function handleSplashScreen() {
+  const splash = document.getElementById('ai60-splash');
+  if (!splash) return;
+
+  const alreadyShown = sessionStorage.getItem('ai60_splash_shown');
+  if (alreadyShown === 'true') {
+    splash.classList.add('hidden');
+    return;
+  }
+
+  // Respect prefers-reduced-motion
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const displayDuration = prefersReduced ? 300 : 1650; // Minimum 1650ms visible
+
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.classList.add('hidden');
+      sessionStorage.setItem('ai60_splash_shown', 'true');
+    }, 450);
+  }, displayDuration);
+}
+
+// ============================================================================
+// CURSOR-REACTIVE LIVE WALLPAPER (Ambient Orbs Parallax & Ambient Cursor Glow)
+// ============================================================================
+let wallpaperRafId = null;
+
+function initCursorWallpaper() {
+  const wallpaper = document.querySelector('.ai60-live-wallpaper');
+  if (!wallpaper) return;
+
+  // Respect prefers-reduced-motion
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+
+  // State coordinates
+  const state = {
+    // Current smoothed coordinates
+    mouseX: window.innerWidth / 2,
+    mouseY: window.innerHeight * 0.4,
+    orb1X: 0,
+    orb1Y: 0,
+    orb2X: 0,
+    orb2Y: 0,
+    orb3X: 0,
+    orb3Y: 0,
+
+    // Target coordinates
+    targetMouseX: window.innerWidth / 2,
+    targetMouseY: window.innerHeight * 0.4,
+    targetOrb1X: 0,
+    targetOrb1Y: 0,
+    targetOrb2X: 0,
+    targetOrb2Y: 0,
+    targetOrb3X: 0,
+    targetOrb3Y: 0,
+
+    isActive: true
+  };
+
+  // Inertia smoothing factors (different speeds for depth & parallax)
+  const SMOOTH_MOUSE = 0.08;
+  const SMOOTH_ORB1 = 0.055; // Strongest response
+  const SMOOTH_ORB2 = 0.040; // Medium response
+  const SMOOTH_ORB3 = 0.025; // Slowest / subtle response
+
+  // Parallax multipliers (pixels offset relative to screen center)
+  const MAX_ORB1_X = 55;
+  const MAX_ORB1_Y = 42;
+  const MAX_ORB2_X = -36;
+  const MAX_ORB2_Y = -28;
+  const MAX_ORB3_X = 22;
+  const MAX_ORB3_Y = 18;
+
+  function onPointerMove(e) {
+    // Ignore touch interactions on mobile devices
+    if (e.pointerType === 'touch') return;
+
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const width = window.innerWidth || 1920;
+    const height = window.innerHeight || 1080;
+
+    // Normalized coordinates from -1 to 1 (center is 0,0)
+    const normX = Math.max(-1, Math.min(1, (clientX / width - 0.5) * 2));
+    const normY = Math.max(-1, Math.min(1, (clientY / height - 0.5) * 2));
+
+    state.targetMouseX = clientX;
+    state.targetMouseY = clientY;
+
+    state.targetOrb1X = normX * MAX_ORB1_X;
+    state.targetOrb1Y = normY * MAX_ORB1_Y;
+
+    state.targetOrb2X = normX * MAX_ORB2_X;
+    state.targetOrb2Y = normY * MAX_ORB2_Y;
+
+    state.targetOrb3X = normX * MAX_ORB3_X;
+    state.targetOrb3Y = normY * MAX_ORB3_Y;
+  }
+
+  window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+  function render() {
+    if (!state.isActive) return;
+
+    // Inertia interpolation (Linear Interpolation / Lerp)
+    state.mouseX += (state.targetMouseX - state.mouseX) * SMOOTH_MOUSE;
+    state.mouseY += (state.targetMouseY - state.mouseY) * SMOOTH_MOUSE;
+
+    state.orb1X += (state.targetOrb1X - state.orb1X) * SMOOTH_ORB1;
+    state.orb1Y += (state.targetOrb1Y - state.orb1Y) * SMOOTH_ORB1;
+
+    state.orb2X += (state.targetOrb2X - state.orb2X) * SMOOTH_ORB2;
+    state.orb2Y += (state.targetOrb2Y - state.orb2Y) * SMOOTH_ORB2;
+
+    state.orb3X += (state.targetOrb3X - state.orb3X) * SMOOTH_ORB3;
+    state.orb3Y += (state.targetOrb3Y - state.orb3Y) * SMOOTH_ORB3;
+
+    // Apply to CSS variables on .ai60-live-wallpaper
+    wallpaper.style.setProperty('--mouse-x', `${state.mouseX.toFixed(1)}px`);
+    wallpaper.style.setProperty('--mouse-y', `${state.mouseY.toFixed(1)}px`);
+    wallpaper.style.setProperty('--orb1-x', `${state.orb1X.toFixed(2)}px`);
+    wallpaper.style.setProperty('--orb1-y', `${state.orb1Y.toFixed(2)}px`);
+    wallpaper.style.setProperty('--orb2-x', `${state.orb2X.toFixed(2)}px`);
+    wallpaper.style.setProperty('--orb2-y', `${state.orb2Y.toFixed(2)}px`);
+    wallpaper.style.setProperty('--orb3-x', `${state.orb3X.toFixed(2)}px`);
+    wallpaper.style.setProperty('--orb3-y', `${state.orb3Y.toFixed(2)}px`);
+
+    wallpaperRafId = requestAnimationFrame(render);
+  }
+
+  // Start RAF loop
+  wallpaperRafId = requestAnimationFrame(render);
+
+  // Pause loop when tab is hidden, resume when tab is active
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      state.isActive = false;
+      wallpaper.classList.add('wallpaper-paused');
+      if (wallpaperRafId) {
+        cancelAnimationFrame(wallpaperRafId);
+        wallpaperRafId = null;
+      }
+    } else {
+      wallpaper.classList.remove('wallpaper-paused');
+      if (!state.isActive) {
+        state.isActive = true;
+        wallpaperRafId = requestAnimationFrame(render);
+      }
+    }
+  });
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize and apply stored theme
+  initTheme();
+
+  // Run initial splash screen (once per session)
+  handleSplashScreen();
+
+  // Initialize cursor-reactive live wallpaper
+  initCursorWallpaper();
+
   // Parse URL hash for view routing
   const initialHash = window.location.hash.replace('#', '') || 'landing';
   switchView(initialHash, false);
@@ -566,13 +761,16 @@ function copyShareLink(urlElId, btnId) {
   const url = getMyReferralUrl() || document.getElementById(urlElId)?.textContent || '';
   if (!url.includes('/r/')) { showToast('Register first to get your referral link.', 'error'); return; }
   const done = () => {
-    showToast('Referral link copied');
+    showToast('✓ Referral link copied');
     const btn = document.getElementById(btnId);
     if (btn) {
-      const original = btn.textContent;
-      btn.textContent = 'Copied \u2713';
+      if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>✓ Link copied</span>`;
       btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+      setTimeout(() => {
+        if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+        btn.classList.remove('copied');
+      }, 2000);
     }
   };
   const fallback = () => {
@@ -1095,6 +1293,99 @@ function renderAmbassadorsTable(ambs) {
     `;
     tbody.appendChild(tr);
   });
+}
+
+function openAddAmbassadorModal() {
+  const modal = document.getElementById('modal-ambassador');
+  if (modal) {
+    modal.classList.add('open');
+    const nameInput = document.getElementById('amb-name');
+    if (nameInput) nameInput.focus();
+    const errEl = document.getElementById('amb-error-msg');
+    if (errEl) errEl.textContent = '';
+  }
+}
+
+function closeAddAmbassadorModal() {
+  const modal = document.getElementById('modal-ambassador');
+  if (modal) {
+    modal.classList.remove('open');
+  }
+}
+
+async function handleAddAmbassadorSubmit(e) {
+  e.preventDefault();
+  const token = STATE.adminToken || localStorage.getItem('ai60_admin_token');
+  const btn = document.getElementById('amb-submit-btn');
+  const errEl = document.getElementById('amb-error-msg');
+  if (errEl) errEl.textContent = '';
+
+  const name = document.getElementById('amb-name')?.value.trim();
+  const college = document.getElementById('amb-college')?.value.trim();
+  const club = document.getElementById('amb-club')?.value.trim();
+  const contact = document.getElementById('amb-contact')?.value.trim();
+
+  if (!name || !college) {
+    if (errEl) errEl.textContent = 'Please enter ambassador name and college.';
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Registering Partner...';
+  }
+
+  try {
+    const res = await fetch('/api/admin/ambassador', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ambassador_name: name,
+        college,
+        club,
+        contact
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (errEl) errEl.textContent = data.error || 'Failed to register ambassador';
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Generate Partner Code & Register';
+      }
+      return;
+    }
+
+    // Success! Reset form and close modal
+    document.getElementById('ambassador-form')?.reset();
+    closeAddAmbassadorModal();
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Generate Partner Code & Register';
+    }
+
+    showToast(`✓ Partner Registered! Tracking Code: ${data.ambassador_code}`, 'success');
+
+    // Refresh ambassadors table immediately
+    const ambRes = await fetch('/api/admin/ambassadors', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (ambRes.ok) {
+      const ambData = await ambRes.json();
+      renderAmbassadorsTable(ambData.ambassadors || []);
+    }
+  } catch (err) {
+    console.error('Error adding ambassador:', err);
+    if (errEl) errEl.textContent = 'Network error while registering ambassador.';
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Generate Partner Code & Register';
+    }
+  }
 }
 
 function renderExperimentsList(exps) {

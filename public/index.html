@@ -7,16 +7,45 @@
   <title>AI60 — Build Your First AI Project in 60 Minutes</title>
   <meta name="description"
     content="AI60 Workshop - Build your first AI project in 60 minutes. Learn by building and deploying an MVP.">
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('ai60_theme');
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text y='.7em' x='.2em' font-size='60' fill='white' font-family='sans-serif' font-weight='bold'>60</text></svg>">
 </head>
 
 <body>
-  <!-- Ambient background glow effects -->
-  <div class="bg-glow-container">
-    <div class="glow-orb-1"></div>
-    <div class="glow-orb-2"></div>
+  <!-- AI60 Initial Loading / Splash Screen (Shown once per browser session for 1.6-1.8s) -->
+  <div id="ai60-splash" class="ai60-splash" aria-hidden="false">
+    <div class="splash-content">
+      <div class="splash-logo-container">
+        <div class="splash-brand-icon">60</div>
+        <div class="splash-logo">AI60</div>
+      </div>
+      <div class="splash-tagline">LEARN AI BY BUILDING.</div>
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+      <div class="splash-status">INITIALIZING WORKSHOP ENVIRONMENT...</div>
+    </div>
+  </div>
+
+  <!-- AI60 Ambient Live Wallpaper (Cursor-reactive ambient aura orbs + cursor glow) -->
+  <div class="ai60-live-wallpaper" aria-hidden="true">
+    <div class="wallpaper-cursor-glow"></div>
+    <div class="wallpaper-orb orb-1"></div>
+    <div class="wallpaper-orb orb-2"></div>
+    <div class="wallpaper-orb orb-3"></div>
   </div>
 
   <div class="app-container">
@@ -53,11 +82,27 @@
           <nav class="nav-tabs-wrapper admin-nav" aria-label="Admin Navigation" style="display: none;">
             <button class="nav-tab-btn" data-view="admin" onclick="switchView('admin')">Growth OS</button>
             <button class="nav-tab-btn" data-view="strategy" onclick="switchView('strategy')">Campaigns</button>
-            <!-- AI Hub nav removed from UI (backend AI gateway preserved for later use) -->
           </nav>
 
           <!-- Header Actions -->
-          <div class="header-actions" style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="header-actions">
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle light or dark theme" title="Toggle theme">
+              <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
             <button id="header-login-btn" class="btn btn-secondary btn-sm" onclick="switchView('login')"
               style="font-size:0.78rem; padding:0.35rem 0.75rem;">Login</button>
             <div id="auth-state-container">
@@ -595,15 +640,27 @@
           <div class="referral-box" style="margin-top:0; margin-bottom:0; padding:1.25rem;">
             <h3 style="font-size:1.1rem; margin-bottom:1rem;">Your Referral Link</h3>
             
-            <div style="background:var(--bg-black); padding:0.75rem; border-radius:var(--radius-md); font-family:monospace; margin-bottom:1rem; word-break:break-all; font-size:0.9rem;">
-              <span id="student-ref-url-display"></span>
+            <div class="referral-url-box">
+              <span id="student-ref-url-display" class="referral-url-text">Loading referral link...</span>
+              <button id="student-copy-btn" class="btn btn-secondary btn-sm copy-btn" onclick="copyReferralLink()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copy Link</span>
+              </button>
             </div>
             
-            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom: 1.5rem;">
-              <button class="btn btn-emerald btn-sm" onclick="shareReferralWhatsApp()">WhatsApp</button>
-              <button class="btn btn-secondary btn-sm" onclick="shareReferralLinkedIn()">LinkedIn</button>
-              <button class="btn btn-secondary btn-sm" onclick="shareReferralTelegram()">Telegram</button>
-              <button class="btn btn-secondary btn-sm" onclick="copyReferralLink()">Copy Link</button>
+            <div class="referral-actions-grid" style="margin-bottom: 1.5rem;">
+              <button class="share-btn share-btn-whatsapp" onclick="shareReferralWhatsApp()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.476-.15-.677.15-.2.301-.777.98-.953 1.18-.175.2-.351.226-.652.075-.3-.15-1.27-.468-2.42-1.493-.894-.798-1.498-1.783-1.674-2.084-.175-.3-.019-.462.132-.612.136-.135.301-.351.452-.527.15-.175.2-.301.301-.501.101-.2.05-.376-.025-.527-.075-.15-.677-1.632-.928-2.235-.244-.588-.493-.508-.677-.518l-.577-.01c-.2 0-.527.075-.803.376s-1.054 1.03-1.054 2.513c0 1.483 1.08 2.913 1.23 3.114.15.2 2.124 3.243 5.145 4.547.719.31 1.28.496 1.718.636.722.23 1.379.197 1.898.12.578-.087 1.78-.727 2.03-1.43.251-.702.251-1.304.175-1.43-.075-.125-.276-.2-.577-.35zM12.04 2C6.52 2 2.04 6.48 2.04 12c0 1.94.55 3.75 1.51 5.28L2 22l4.87-1.51A9.97 9.97 0 0012.04 22c5.52 0 10-4.48 10-10S17.56 2 12.04 2z"/></svg>
+                <span>WhatsApp</span>
+              </button>
+              <button class="share-btn share-btn-linkedin" onclick="shareReferralLinkedIn()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.68 1.68 0 1 0 0-3.36 1.68 1.68 0 0 0 0 3.36m1.39 9.74v-8.37H5.07v8.37h2.78z"/></svg>
+                <span>LinkedIn</span>
+              </button>
+              <button class="share-btn share-btn-telegram" onclick="shareReferralTelegram()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>
+                <span>Telegram</span>
+              </button>
             </div>
 
             <div style="display:flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap:wrap;">
@@ -1468,7 +1525,7 @@
               <h3>College Campus Ambassadors</h3>
               <p style="font-size:0.82rem;">Student partners driving direct club and hostel community signups</p>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="alert('Ambassador registration modal ready')">
+            <button class="btn btn-secondary btn-sm" onclick="openAddAmbassadorModal()">
               + Add Partner Club
             </button>
           </div>
@@ -2008,22 +2065,73 @@
         <div class="share-card-label">Your personal referral link</div>
         <div class="referral-url-copy">
           <span class="referral-url-text" id="success-ref-url">Loading referral link...</span>
-          <button class="btn btn-secondary btn-sm" id="success-copy-btn" onclick="copySuccessLink()">
-            Copy Link
+          <button class="btn btn-secondary btn-sm copy-btn" id="success-copy-btn" onclick="copySuccessLink()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Link</span>
           </button>
         </div>
 
         <div class="share-card-label">Share with your friends</div>
         <div class="share-card-actions">
-          <button class="share-btn share-btn-whatsapp" id="success-share-whatsapp" onclick="shareReferral('whatsapp')">WhatsApp</button>
-          <button class="share-btn share-btn-linkedin" id="success-share-linkedin" onclick="shareReferral('linkedin')">LinkedIn</button>
-          <button class="share-btn share-btn-telegram" id="success-share-telegram" onclick="shareReferral('telegram')">Telegram</button>
+          <button class="share-btn share-btn-whatsapp" id="success-share-whatsapp" onclick="shareReferral('whatsapp')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.476-.15-.677.15-.2.301-.777.98-.953 1.18-.175.2-.351.226-.652.075-.3-.15-1.27-.468-2.42-1.493-.894-.798-1.498-1.783-1.674-2.084-.175-.3-.019-.462.132-.612.136-.135.301-.351.452-.527.15-.175.2-.301.301-.501.101-.2.05-.376-.025-.527-.075-.15-.677-1.632-.928-2.235-.244-.588-.493-.508-.677-.518l-.577-.01c-.2 0-.527.075-.803.376s-1.054 1.03-1.054 2.513c0 1.483 1.08 2.913 1.23 3.114.15.2 2.124 3.243 5.145 4.547.719.31 1.28.496 1.718.636.722.23 1.379.197 1.898.12.578-.087 1.78-.727 2.03-1.43.251-.702.251-1.304.175-1.43-.075-.125-.276-.2-.577-.35zM12.04 2C6.52 2 2.04 6.48 2.04 12c0 1.94.55 3.75 1.51 5.28L2 22l4.87-1.51A9.97 9.97 0 0012.04 22c5.52 0 10-4.48 10-10S17.56 2 12.04 2z"/></svg>
+            <span>WhatsApp</span>
+          </button>
+          <button class="share-btn share-btn-linkedin" id="success-share-linkedin" onclick="shareReferral('linkedin')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.68 1.68 0 1 0 0-3.36 1.68 1.68 0 0 0 0 3.36m1.39 9.74v-8.37H5.07v8.37h2.78z"/></svg>
+            <span>LinkedIn</span>
+          </button>
+          <button class="share-btn share-btn-telegram" id="success-share-telegram" onclick="shareReferral('telegram')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>
+            <span>Telegram</span>
+          </button>
         </div>
       </section>
 
       <button class="btn btn-secondary btn-block" id="success-go-dashboard-btn" onclick="closeSuccessAndGoToStudent()">
         Enter Student Dashboard &amp; Workshop Hub →
       </button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Add Partner Club / Campus Ambassador Modal -->
+  <div id="modal-ambassador" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close-btn" onclick="closeAddAmbassadorModal()">✕</button>
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <span class="card-tag">GROWTH OS PARTNERSHIP</span>
+        <h2 style="font-size:1.75rem; margin-top:0.4rem;">Add Partner Club / Ambassador</h2>
+        <p style="font-size:0.85rem;">Register a student campus partner or club lead to track direct community signups.</p>
+      </div>
+
+      <form id="ambassador-form" onsubmit="handleAddAmbassadorSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Ambassador Name *</label>
+          <input type="text" id="amb-name" class="form-input" placeholder="e.g. Rohit Verma" required>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Engineering College *</label>
+            <input type="text" id="amb-college" class="form-input" placeholder="e.g. VIT Vellore" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Club / Chapter Name</label>
+            <input type="text" id="amb-club" class="form-input" placeholder="e.g. Google Developer Student Club">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact / Phone / WhatsApp</label>
+          <input type="text" id="amb-contact" class="form-input" placeholder="e.g. 9876543210 or rohit@vit.edu">
+        </div>
+
+        <button type="submit" id="amb-submit-btn" class="btn btn-primary btn-lg btn-block" style="margin-top:0.5rem;">
+          Generate Partner Code &amp; Register
+        </button>
+        <div id="amb-error-msg" class="input-error" style="text-align:center; margin-top:0.75rem;"></div>
+      </form>
     </div>
   </div>
 
