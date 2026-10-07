@@ -219,6 +219,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize cursor-reactive live wallpaper
   initCursorWallpaper();
 
+  // Restore stored user session if exists first
+  const storedUser = localStorage.getItem('ai60_user');
+  if (storedUser) {
+    try {
+      STATE.currentUser = JSON.parse(storedUser);
+      STATE.userToken = localStorage.getItem('ai60_user_token');
+      updateAuthUI();
+      if (STATE.currentUser) {
+        updateStudentViewWithUser(STATE.currentUser);
+      }
+    } catch (e) {
+      console.warn('Session parse error', e);
+      localStorage.removeItem('ai60_user');
+      localStorage.removeItem('ai60_user_token');
+    }
+  }
+
+  // Restore stored admin token
+  const storedAdminToken = localStorage.getItem('ai60_admin_token');
+  if (storedAdminToken) {
+    STATE.adminToken = storedAdminToken;
+  }
+
   // Parse URL hash for view routing
   const initialHash = window.location.hash.replace('#', '') || 'landing';
   switchView(initialHash, false);
@@ -237,27 +260,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (refInput) refInput.value = REF_PARAM;
   }
 
-  // Restore stored user session if exists
-  const storedUser = localStorage.getItem('ai60_user');
-  if (storedUser) {
-    try {
-      STATE.currentUser = JSON.parse(storedUser);
-      STATE.userToken = localStorage.getItem('ai60_user_token');
-      updateAuthUI();
-      if (typeof refreshStudentDashboard === 'function') {
-        refreshStudentDashboard();
-      }
-    } catch (e) {
-      console.warn('Session parse error', e);
-      localStorage.removeItem('ai60_user');
-      localStorage.removeItem('ai60_user_token');
+  if (STATE.currentUser && (initialHash === 'student' || initialHash === 'submit')) {
+    if (typeof refreshStudentDashboard === 'function') {
+      refreshStudentDashboard();
     }
-  }
-
-  // Restore stored admin token
-  const storedAdminToken = localStorage.getItem('ai60_admin_token');
-  if (storedAdminToken) {
-    STATE.adminToken = storedAdminToken;
   }
 
   if (STATE.adminToken) await loadAdminData();
@@ -320,7 +326,12 @@ function switchView(viewName, updateHash = true) {
 
   // Refresh view-specific data
   if (viewName === 'admin') loadAdminData();
-  if (viewName === 'student' || viewName === 'submit') refreshStudentDashboard();
+  if (viewName === 'student' || viewName === 'submit') {
+    if (STATE.currentUser) {
+      updateStudentViewWithUser(STATE.currentUser);
+    }
+    refreshStudentDashboard();
+  }
   if (viewName === 'ai-hub') loadAiHubData();
 }
 
@@ -361,6 +372,10 @@ function logoutUser() {
   if (typeof updateProjectEvaluationState === 'function') {
     updateProjectEvaluationState(null, null);
   }
+  const urlEl = document.getElementById('student-ref-url-display');
+  if (urlEl) urlEl.textContent = 'Loading referral link...';
+  const nameEl = document.getElementById('student-name-display');
+  if (nameEl) nameEl.textContent = 'Register to see your details';
   switchView('landing');
   showToast('Logged out successfully.');
 }
@@ -408,6 +423,9 @@ async function performLogin(email, password) {
       localStorage.setItem('ai60_user', JSON.stringify(data.user));
       
       updateAuthUI();
+      if (data.user) {
+        updateStudentViewWithUser(data.user);
+      }
       
       if (data.user.role === 'admin') {
         STATE.adminToken = data.token;
@@ -820,7 +838,13 @@ function shareReferral(platform) {
 // STUDENT PORTAL & REFERRAL DASHBOARD
 // ============================================================================
 function updateStudentViewWithUser(user) {
-  if (!user) return;
+  const urlEl = document.getElementById('student-ref-url-display');
+  if (!user) {
+    if (urlEl && urlEl.textContent === 'Loading referral link...') {
+      urlEl.innerHTML = `Unable to load referral link. <button onclick="refreshStudentDashboard()" class="btn btn-secondary btn-sm" style="margin-left:8px;padding:2px 8px;font-size:0.75rem;">Retry</button>`;
+    }
+    return;
+  }
   const nameEl = document.getElementById('student-name-display');
   if (nameEl) nameEl.textContent = user.full_name || 'Student';
 
@@ -833,22 +857,40 @@ function updateStudentViewWithUser(user) {
   const codeEl = document.getElementById('student-ref-code-display');
   if (codeEl) codeEl.textContent = user.referral_code || '';
 
-  const urlEl = document.getElementById('student-ref-url-display');
   if (urlEl) {
-    const refUrl = `${window.location.origin}/r/${user.referral_code || ''}`;
-    urlEl.textContent = refUrl;
+    if (user.referral_code) {
+      const refUrl = `${window.location.origin}/r/${encodeURIComponent(user.referral_code)}`;
+      urlEl.textContent = refUrl;
+    } else {
+      urlEl.innerHTML = `Unable to load referral link. <button onclick="refreshStudentDashboard()" class="btn btn-secondary btn-sm" style="margin-left:8px;padding:2px 8px;font-size:0.75rem;">Retry</button>`;
+    }
   }
 }
 
 async function refreshStudentDashboard() {
   const token = localStorage.getItem('ai60_user_token');
   if (!token) return;
+  const urlEl = document.getElementById('student-ref-url-display');
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
   try {
     const res = await fetch('/api/student/dashboard', {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal: controller.signal
     });
+
     if (res.ok) {
       const data = await res.json();
+      if (data.user) {
+        STATE.currentUser = data.user;
+        localStorage.setItem('ai60_user', JSON.stringify(data.user));
+        updateStudentViewWithUser(data.user);
+      } else if (STATE.currentUser) {
+        updateStudentViewWithUser(STATE.currentUser);
+      }
+
       if (data.referrals) {
         const clicks = data.referrals.clicks !== undefined ? data.referrals.clicks : (data.referrals.total || 0);
         const successful = data.referrals.successful || 0;
@@ -860,7 +902,6 @@ async function refreshStudentDashboard() {
         const rate = clicks > 0 ? Math.round((successful / clicks) * 100) : 0;
         const convEl = document.getElementById('student-conv-rate');
         if (convEl) convEl.textContent = clicks > 0 ? `${rate}%` : '0%';
-        
         
         // --- Dashboard UX Additions ---
         const dCount = document.getElementById('dash-ref-count');
@@ -898,7 +939,7 @@ async function refreshStudentDashboard() {
         if (oldCount) oldCount.textContent = `${successful} / ${nextM.threshold}`;
         // ------------------------------
         
-const mp = document.getElementById('milestone-progress-text');
+        const mp = document.getElementById('milestone-progress-text');
         if (mp) mp.textContent = `${successful} Verified Referrals`;
 
         // Update milestone unlock states (thresholds from shared referral-milestones.js)
@@ -923,9 +964,23 @@ const mp = document.getElementById('milestone-progress-text');
 
       // Populate Project & AI Evaluation according to 4-State Lifecycle
       updateProjectEvaluationState(data.project || null, data.evaluation || null);
+    } else {
+      console.warn('Student dash fetch failed with status:', res.status);
+      if (STATE.currentUser && STATE.currentUser.referral_code) {
+        updateStudentViewWithUser(STATE.currentUser);
+      } else if (urlEl && urlEl.textContent === 'Loading referral link...') {
+        urlEl.innerHTML = `Unable to load referral link. <button onclick="refreshStudentDashboard()" class="btn btn-secondary btn-sm" style="margin-left:8px;padding:2px 8px;font-size:0.75rem;">Retry</button>`;
+      }
     }
   } catch (err) {
     console.warn('Student dash fetch error', err);
+    if (STATE.currentUser && STATE.currentUser.referral_code) {
+      updateStudentViewWithUser(STATE.currentUser);
+    } else if (urlEl && urlEl.textContent === 'Loading referral link...') {
+      urlEl.innerHTML = `Unable to load referral link. <button onclick="refreshStudentDashboard()" class="btn btn-secondary btn-sm" style="margin-left:8px;padding:2px 8px;font-size:0.75rem;">Retry</button>`;
+    }
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

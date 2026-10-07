@@ -359,9 +359,20 @@ app.post('/api/logout', (req, res) => {
 
 // Get current user
 app.get('/api/me', authMiddleware, studentMiddleware, (req, res) => {
-  const user = get('SELECT id, full_name, email, phone, college, branch, graduation_year, referral_code, role, workshop_progress, workshop_status, display_name, intent_level, created_at FROM users WHERE id = ?', [req.user.id]);
+  let user = get('SELECT id, full_name, email, phone, college, branch, graduation_year, referral_code, role, workshop_progress, workshop_status, display_name, intent_level, created_at FROM users WHERE id = ?', [req.user.id]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   
+  // Ensure referral_code exists on user record (self-healing)
+  if (!user.referral_code) {
+    let myReferralCode;
+    do {
+      myReferralCode = generateReferralCode();
+    } while (get('SELECT id FROM users WHERE referral_code = ?', [myReferralCode]));
+    run('UPDATE users SET referral_code = ? WHERE id = ?', [myReferralCode, user.id]);
+    saveDb();
+    user.referral_code = myReferralCode;
+  }
+
   // Get referral stats
   const referralCount = get('SELECT COUNT(*) as count FROM referrals WHERE referrer_id = ? AND status = ?', [req.user.id, 'registered']);
   user.referral_count = referralCount?.count || 0;
@@ -375,8 +386,19 @@ app.get('/api/me', authMiddleware, studentMiddleware, (req, res) => {
 
 app.get('/api/student/dashboard', authMiddleware, studentMiddleware, (req, res) => {
   try {
-    const user = get('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    let user = get('SELECT * FROM users WHERE id = ?', [req.user.id]);
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Ensure referral_code exists on user record (self-healing)
+    if (!user.referral_code) {
+      let myReferralCode;
+      do {
+        myReferralCode = generateReferralCode();
+      } while (get('SELECT id FROM users WHERE referral_code = ?', [myReferralCode]));
+      run('UPDATE users SET referral_code = ? WHERE id = ?', [myReferralCode, user.id]);
+      saveDb();
+      user.referral_code = myReferralCode;
+    }
 
     const referralStats = get(`
       SELECT 
