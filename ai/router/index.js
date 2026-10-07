@@ -1,12 +1,12 @@
 const DEFAULT_ROUTING = {
-  'workshop_chat': ['Groq', 'Gemini', 'OpenAI'],
-  'faq': ['Groq', 'Gemini', 'OpenAI'],
+  'workshop_chat': ['Gemini', 'Groq', 'OpenAI'],
+  'faq': ['Gemini', 'Groq', 'OpenAI'],
   'summarization': ['Gemini', 'OpenAI', 'Anthropic', 'Groq'],
-  'project_ideas': ['OpenAI', 'Gemini', 'Groq', 'Anthropic'],
-  'project_evaluation': ['Anthropic', 'OpenAI', 'Gemini', 'Groq'],
-  'growth_analysis': ['OpenAI', 'Gemini', 'Anthropic', 'Groq'],
-  'growth_copilot': ['OpenAI', 'Gemini', 'Anthropic', 'Groq'],
-  'message_generation': ['Groq', 'Gemini', 'OpenAI']
+  'project_ideas': ['Gemini', 'OpenAI', 'Groq', 'Anthropic'],
+  'project_evaluation': ['Gemini', 'Anthropic', 'OpenAI', 'Groq'],
+  'growth_analysis': ['Gemini', 'OpenAI', 'Anthropic', 'Groq'],
+  'growth_copilot': ['Gemini', 'OpenAI', 'Anthropic', 'Groq'],
+  'message_generation': ['Gemini', 'Groq', 'OpenAI']
 };
 
 const PROVIDER_NAME_MAP = {
@@ -22,7 +22,7 @@ class ModelRouter {
   }
 
   getRoute(task) {
-    let chain = this.routingTable[task] || ['OpenAI', 'Gemini', 'Anthropic', 'Groq'];
+    let chain = this.routingTable[task] || ['Gemini', 'OpenAI', 'Anthropic', 'Groq'];
     
     // Check if user set a primary provider via LLM_PRIMARY_PROVIDER
     const primaryKey = (process.env.LLM_PRIMARY_PROVIDER || '').trim().toLowerCase();
@@ -39,4 +39,3 @@ class ModelRouter {
 }
 
 module.exports = { ModelRouter };
-

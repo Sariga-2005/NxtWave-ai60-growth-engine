@@ -49,8 +49,30 @@ function generateReferralCode() {
   return code;
 }
 
+function extractAuthToken(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader && typeof authHeader === 'string') {
+    const parts = authHeader.split(/\s+/);
+    if (parts.length === 2 && /^bearer$/i.test(parts[0])) {
+      return parts[1].trim();
+    }
+    return authHeader.replace(/^Bearer\s+/i, '').trim();
+  }
+  if (req.headers['x-auth-token']) {
+    return String(req.headers['x-auth-token']).trim();
+  }
+  if (req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;\s*)(?:ai60_user_token|ai60_admin_token|ai60_token|token)=([^;]+)/);
+    if (match) return decodeURIComponent(match[1]).trim();
+  }
+  if (req.query && req.query.token) {
+    return String(req.query.token).trim();
+  }
+  return null;
+}
+
 function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = extractAuthToken(req);
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   const thash = hashToken(token);
   const session = get("SELECT * FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')", [thash]);
@@ -62,7 +84,7 @@ function authMiddleware(req, res, next) {
 }
 
 function adminMiddleware(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = extractAuthToken(req);
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   const thash = hashToken(token);
   const session = get("SELECT * FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')", [thash]);
@@ -514,6 +536,49 @@ app.get('/api/referral/stats', authMiddleware, studentMiddleware, (req, res) => 
   }
 });
 
+app.get('/api/referrals', authMiddleware, studentMiddleware, (req, res) => {
+  const stats = get(`
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'registered' THEN 1 ELSE 0 END) as successful,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+    FROM referrals WHERE referrer_id = ?
+  `, [req.user.id]);
+  const referrals = all(`
+    SELECT r.id, r.status, r.created_at, u.full_name, u.college
+    FROM referrals r
+    LEFT JOIN users u ON r.referred_id = u.id
+    WHERE r.referrer_id = ?
+    ORDER BY r.created_at DESC
+  `, [req.user.id]);
+  res.json({
+    total: stats?.total || 0,
+    successful: stats?.successful || 0,
+    pending: stats?.pending || 0,
+    conversion_rate: stats?.total > 0 ? Math.round((stats.successful / stats.total) * 100 * 10) / 10 : 0,
+    referrals
+  });
+});
+
+app.get('/api/referral', authMiddleware, studentMiddleware, (req, res) => {
+  const stats = get(`
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'registered' THEN 1 ELSE 0 END) as successful,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+    FROM referrals WHERE referrer_id = ?
+  `, [req.user.id]);
+  res.json({
+    referral_code: req.user.referral_code,
+    referral_url: `${req.protocol}://${req.get('host')}/r/${req.user.referral_code}`,
+    stats: {
+      total: stats?.total || 0,
+      successful: stats?.successful || 0,
+      pending: stats?.pending || 0
+    }
+  });
+});
+
 // Track referral link click
 app.post('/api/referral/track', (req, res) => {
   try {
@@ -799,6 +864,32 @@ function handleProjectSubmit(req, res) {
     res.status(500).json({ error: 'Failed to submit project. Please try again.' });
   }
 }
+
+app.get('/api/project', authMiddleware, studentMiddleware, (req, res) => {
+  try {
+    const project = get('SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC LIMIT 1', [req.user.id]);
+    let evaluation = null;
+    if (project) {
+      evaluation = get('SELECT * FROM evaluations WHERE project_id = ?', [project.id]);
+      if (evaluation) {
+        try { evaluation.strengths = JSON.parse(evaluation.strengths || '[]'); } catch(e) { evaluation.strengths = []; }
+        try { evaluation.weaknesses = JSON.parse(evaluation.weaknesses || '[]'); } catch(e) { evaluation.weaknesses = []; }
+        try { evaluation.suggestions = JSON.parse(evaluation.suggestions || '[]'); } catch(e) { evaluation.suggestions = []; }
+        try { evaluation.next_steps = JSON.parse(evaluation.next_steps || '[]'); } catch(e) { evaluation.next_steps = []; }
+        try { evaluation.categories = JSON.parse(evaluation.categories_data || '{}'); } catch(e) { evaluation.categories = {}; }
+      }
+    }
+    res.json({
+      success: true,
+      has_project: Boolean(project),
+      project: project || null,
+      evaluation: evaluation || null
+    });
+  } catch (error) {
+    console.error('Fetch project error:', error);
+    res.status(500).json({ error: 'Failed to load project details' });
+  }
+});
 
 app.post('/api/project', authMiddleware, studentMiddleware, handleProjectSubmit);
 app.post('/api/project/submit', authMiddleware, studentMiddleware, handleProjectSubmit);
@@ -1362,6 +1453,8 @@ INSTRUCTIONS:
 
     res.json({
       status: 'success',
+      provider: result.provider,
+      model: result.model,
       provenance: 'live_data',
       generated_at: new Date().toISOString(),
       metrics: {
